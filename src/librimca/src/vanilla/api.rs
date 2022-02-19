@@ -14,8 +14,8 @@ pub struct Version {
 }
 
 pub fn versions(snapshots: bool) -> Result<Vec<Version>, ApiError> {
-	let resp = reqwest::blocking::get(VERSION_MANIFEST_URL)?;
-	let versions: Vec<Version> = serde_json::from_slice(&resp)?;
+	let versions = reqwest::blocking::get(VERSION_MANIFEST_URL)?
+		.json::<Vec<Version>>()?;
 	Ok(versions
 		.into_iter()
 		.filter(|v| !(v.r#type.eq("snapshot")==true && !snapshots))
