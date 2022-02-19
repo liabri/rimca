@@ -1,19 +1,22 @@
 mod download;
+use download::DownloadSequence;
 
 mod vanilla;
+use vanilla::Vanilla;
 
 mod error;
 use error::Error;
 
 use std::path::PathBuf;
 
-pub struct Instance {
+pub struct Instance<T> {
 	name: String,
 	path: PathBuf,
+	inner: T,
 	// options: 
 }
 
-impl Instance {
+impl<T: DownloadSequence> Instance<T> {
 	fn delete(&self) -> Result<(), Error> {
 		std::fs::remove_dir_all(&self.path)?;
 		Ok(())
@@ -23,10 +26,10 @@ impl Instance {
 		Ok(())
 	}
 
-	pub fn download(&self, instance_type: &dyn InstanceType) -> Result<(), Error> {
-		Ok(())
+	pub fn download(&self) -> Result<(), Error> {
+		self.inner.download()
 	}
 }
 
-pub trait InstanceType {}
-impl InstanceType for vanilla::Vanilla {}
+// pub trait InstanceType {}
+// impl InstanceType for Vanilla {}

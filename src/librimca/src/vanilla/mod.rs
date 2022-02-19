@@ -1,6 +1,7 @@
 mod api;
 
-use crate::download::{ DownloadSequence, Download };
+use crate::Instance;
+use crate::download::DownloadSequence;
 use crate::error::Error;
 
 pub struct Vanilla {
@@ -21,8 +22,8 @@ impl Vanilla {
 	}
 }
 
-impl DownloadSequence for Download<Vanilla> {
-	fn commence(&self) -> Result<(), Error> {
+impl DownloadSequence for Instance<Vanilla> {
+	fn download(&self) -> Result<(), Error> {
 		Ok(())
 	}
 
