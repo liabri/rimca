@@ -1,3 +1,5 @@
+mod api;
+
 use crate::download::{ DownloadSequence, Download };
 use crate::error::Error;
 
