@@ -1,3 +1,5 @@
+mod download;
+
 mod error;
 use error::Error;
 
@@ -15,7 +17,7 @@ pub enum InstanceType {
 }
 
 impl Instance {
-	fn delete(&self) -> std::io::Result<()> {
+	fn delete(&self) -> Result<(), Error> {
 		std::fs::remove_dir_all(&self.path)?;
 		Ok(())
 	}
