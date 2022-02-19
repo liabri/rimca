@@ -5,7 +5,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum Error {
-    LaunchError,
+    LaunchError(String),
     IoError(String),
     ApiError(String),
 }
@@ -13,7 +13,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            Error::LaunchError => f.write_str("launch error"),
+            Error::LaunchError(ref e) => f.write_str(e),
             Error::IoError(ref e) => f.write_str(e),
             Error::ApiError(ref e) => f.write_str(e),
         }
@@ -34,7 +34,11 @@ impl From<ApiError> for Error {
     }
 }
 
-
+impl From<LaunchError> for Error {
+    fn from(e: LaunchError) -> Self {
+        Error::LaunchError(e.to_string())
+    }
+}
 
 
 
@@ -73,4 +77,13 @@ impl From<reqwest::Error> for ApiError {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum LaunchError {
+	Temp
+}
+
+impl fmt::Display for LaunchError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            LaunchError::Temp => f.write_str("temp"),
+        }
+    }
 }
