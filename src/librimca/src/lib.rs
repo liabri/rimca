@@ -1,3 +1,6 @@
+mod error;
+use error::Error;
+
 use std::path::PathBuf;
 
 pub struct Instance {
@@ -7,8 +10,8 @@ pub struct Instance {
 }
 
 pub enum InstanceType {
-	Vanilla(Option<String>),
-	Fabric(Option<String>, Option<String>),
+	Vanilla(Option<String>), 					//game_version
+	Fabric(Option<String>, Option<String>), 	//game_version, loader_version
 }
 
 impl Instance {
@@ -17,6 +20,11 @@ impl Instance {
 		Ok(())
 	}
 
-	pub fn launch(&self, username: &str) {}
-	pub fn download(&self, instance_type: &InstanceType) {}
+	pub fn launch(&self, username: &str) -> Result<(), Error> {
+		Ok(())
+	}
+
+	pub fn download(&self, instance_type: &InstanceType) -> Result<(), Error> {
+		Ok(())
+	}
 }
