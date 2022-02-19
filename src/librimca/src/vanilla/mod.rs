@@ -6,6 +6,7 @@ use crate::error::Error;
 
 pub struct Vanilla {
 	version: String,
+	// meta: Meta,
 }
 
 impl Vanilla {

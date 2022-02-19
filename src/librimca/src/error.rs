@@ -67,3 +67,10 @@ impl From<reqwest::Error> for ApiError {
         ApiError::ReqwestError(e.to_string())
    }
 }
+
+
+
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub enum LaunchError {
+}

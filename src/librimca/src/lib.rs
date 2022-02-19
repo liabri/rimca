@@ -1,6 +1,9 @@
 mod download;
 use download::DownloadSequence;
 
+mod launch;
+use launch::LaunchSequence;
+
 mod vanilla;
 use vanilla::Vanilla;
 
@@ -16,7 +19,7 @@ pub struct Instance<T> {
 	// options: 
 }
 
-impl<T: DownloadSequence> Instance<T> {
+impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 	fn delete(&self) -> Result<(), Error> {
 		std::fs::remove_dir_all(&self.path)?;
 		Ok(())
@@ -30,6 +33,3 @@ impl<T: DownloadSequence> Instance<T> {
 		self.inner.download()
 	}
 }
-
-// pub trait InstanceType {}
-// impl InstanceType for Vanilla {}
