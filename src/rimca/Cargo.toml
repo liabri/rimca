@@ -13,3 +13,4 @@ strip = true
 
 [dependencies]
 librimca = { path = "../librimca" }
+structopt = "0.3.25"

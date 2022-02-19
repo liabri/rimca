@@ -2,13 +2,13 @@ mod state;
 use state::State;
 
 mod download;
-use download::DownloadSequence;
+pub use download::DownloadSequence;
 
 mod launch;
-use launch::LaunchSequence;
+pub use launch::LaunchSequence;
 
 mod vanilla;
-use vanilla::Vanilla;
+pub use vanilla::Vanilla;
 
 mod error;
 use error::Error;
