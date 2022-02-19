@@ -1,26 +1,41 @@
 mod api;
 
 use crate::Instance;
+use crate::state::State;
 use crate::download::DownloadSequence;
 use crate::launch::LaunchSequence;
 use crate::error::{ Error, LaunchError };
 
+use std::path::PathBuf;
+
 pub struct Vanilla {
-	version: String,
+	version: Option<String>,
 	// meta: Meta,
 }
 
 impl Vanilla {
-	pub fn new(version: Option<&str>) -> Self {
+	pub fn new() -> Self {
+		Self {
+			version: None
+		}
+	}
+
+	pub fn from_version(version: Option<&str>) -> Self {
 		if let Some(version) = version {
 			return Self {
-				version: version.to_string()
+				version: Some(version.to_string())
 			}
 		} else {
 			return Self {
-				version: String::from("get latest_version")
+				version: Some(String::from("get latest_version"))
 			}
 		}
+	}
+}
+
+impl Instance<Vanilla> {
+	pub fn new(path: PathBuf, state: State, name: String) -> Self {
+		Self { name, path, inner: Vanilla::new(), state }
 	}
 }
 

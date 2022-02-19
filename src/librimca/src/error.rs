@@ -8,6 +8,8 @@ pub enum Error {
     LaunchError(String),
     IoError(String),
     ApiError(String),
+    StateError(String),
+	InstanceDoesNotExist
 }
 
 impl fmt::Display for Error {
@@ -16,6 +18,8 @@ impl fmt::Display for Error {
             Error::LaunchError(ref e) => f.write_str(e),
             Error::IoError(ref e) => f.write_str(e),
             Error::ApiError(ref e) => f.write_str(e),
+            Error::StateError(ref e) => f.write_str(e),
+            Error::InstanceDoesNotExist => f.write_str("instance does not exist"),
         }
     }
 }
@@ -37,6 +41,12 @@ impl From<ApiError> for Error {
 impl From<LaunchError> for Error {
     fn from(e: LaunchError) -> Self {
         Error::LaunchError(e.to_string())
+    }
+}
+
+impl From<StateError> for Error {
+    fn from(e: StateError) -> Self {
+        Error::StateError(e.to_string())
     }
 }
 
@@ -86,4 +96,36 @@ impl fmt::Display for LaunchError {
             LaunchError::Temp => f.write_str("temp"),
         }
     }
+}
+
+
+
+
+
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub enum StateError {
+	IoError(String),
+	SerdeError(String),
+}
+
+impl fmt::Display for StateError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            StateError::IoError(ref e) => f.write_str(e),
+            StateError::SerdeError(ref e) => f.write_str(e),
+        }
+    }
+}
+
+impl From<io::Error> for StateError {
+    fn from(e: io::Error) -> Self {
+        StateError::IoError(e.to_string())
+    }
+}
+
+impl From<serde_json::Error> for StateError {
+   fn from(e: serde_json::Error) -> Self {
+        StateError::SerdeError(e.to_string())
+   }	
 }
