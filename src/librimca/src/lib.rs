@@ -1,5 +1,7 @@
 mod download;
 
+mod vanilla;
+
 mod error;
 use error::Error;
 
@@ -9,11 +11,6 @@ pub struct Instance {
 	name: String,
 	path: PathBuf,
 	// options: 
-}
-
-pub enum InstanceType {
-	Vanilla(Option<String>), 					//game_version
-	Fabric(Option<String>, Option<String>), 	//game_version, loader_version
 }
 
 impl Instance {
@@ -26,7 +23,10 @@ impl Instance {
 		Ok(())
 	}
 
-	pub fn download(&self, instance_type: &InstanceType) -> Result<(), Error> {
+	pub fn download(&self, instance_type: &dyn InstanceType) -> Result<(), Error> {
 		Ok(())
 	}
 }
+
+pub trait InstanceType {}
+impl InstanceType for vanilla::Vanilla {}

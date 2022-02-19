@@ -4,14 +4,14 @@ pub struct Vanilla {
 
 impl Vanilla {
 	pub fn new(version: Option<&str>) -> Self {
-		if let None = version {
-			//get latest_version
+		if let Some(version) = version {
+			return Self {
+				version: version.to_string()
+			}
 		} else {
-			Self {
-				version
+			return Self {
+				version: String::from("get latest_version")
 			}
 		}
-
-		todo!()
 	}
 }
