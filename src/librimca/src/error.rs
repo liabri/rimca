@@ -1,131 +1,119 @@
-use std::{error::Error as StdError, fmt, io};
+use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, Error>;
-
-#[derive(Clone, Debug, PartialEq)]
-#[non_exhaustive]
+#[derive(Error, Debug)]
 pub enum Error {
-    LaunchError(String),
-    IoError(String),
-    ApiError(String),
-    StateError(String),
-	InstanceDoesNotExist
+    #[error("launch error: `{0}`")]
+    LaunchError(#[from] LaunchError),
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Error::LaunchError(ref e) => f.write_str(e),
-            Error::IoError(ref e) => f.write_str(e),
-            Error::ApiError(ref e) => f.write_str(e),
-            Error::StateError(ref e) => f.write_str(e),
-            Error::InstanceDoesNotExist => f.write_str("instance does not exist"),
-        }
-    }
-}
-
-impl StdError for Error {}
-
-impl From<io::Error> for Error {
-    fn from(e: io::Error) -> Self {
-        Error::IoError(e.to_string())
-    }
-}
-
-impl From<ApiError> for Error {
-    fn from(e: ApiError) -> Self {
-        Error::ApiError(e.to_string())
-    }
-}
-
-impl From<LaunchError> for Error {
-    fn from(e: LaunchError) -> Self {
-        Error::LaunchError(e.to_string())
-    }
-}
-
-impl From<StateError> for Error {
-    fn from(e: StateError) -> Self {
-        Error::StateError(e.to_string())
-    }
-}
-
-
-
-#[derive(Clone, Debug, PartialEq)]
-#[non_exhaustive]
-pub enum ApiError {
-	SerdeError(String),
-	ReqwestError(String),
-	CannotFindLatestVersion,
-}
-
-impl fmt::Display for ApiError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            ApiError::CannotFindLatestVersion => f.write_str("cannot find latest version"),
-            ApiError::SerdeError(ref e) => f.write_str(e),
-            ApiError::ReqwestError(ref e) => f.write_str(e),
-        }
-    }
-}
-
-impl From<serde_json::Error> for ApiError {
-   fn from(e: serde_json::Error) -> Self {
-        ApiError::SerdeError(e.to_string())
-   }	
-}
-
-impl From<reqwest::Error> for ApiError {
-   fn from(e: reqwest::Error) -> Self {
-        ApiError::ReqwestError(e.to_string())
-   }
-}
-
-
-
-#[derive(Clone, Debug, PartialEq)]
-#[non_exhaustive]
+#[derive(Error, Debug)]
 pub enum LaunchError {
-	Temp
+    // #[error("pussy anyhow")]
+    // Temporary(#[from] anyhow::Error),
+    #[error("`{0}` arguments were not found")]
+    ArgumentsNotFound(LaunchArguments),
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("account error: {0}")]
+    AccountError(#[from] AccountError),
+    #[error("state error: {0}")]
+    StateError(#[from] StateError)
 }
 
-impl fmt::Display for LaunchError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            LaunchError::Temp => f.write_str("temp"),
+#[derive(Error, Debug)]
+pub enum LaunchArguments {
+    Game,
+    Java
+}
+
+impl std::fmt::Display for LaunchArguments {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Game => write!(f, "game"),
+            Self::Java => write!(f, "java")
         }
     }
 }
 
-
-
-
-
-#[derive(Clone, Debug, PartialEq)]
-#[non_exhaustive]
+#[derive(Error, Debug)]
 pub enum StateError {
-	IoError(String),
-	SerdeError(String),
+    #[error("scenario could not be found")]
+    ScenarioDoesNotExist,
+    #[error("the launch_options file cannot be found for instance: `{0}`")]
+    CannotFind(String),
+    #[error("cannot find component: `{0}` in launch_options")]
+    ComponentNotFound(String),
+    #[error("cannot find field: `{0}` in component: `{1}` in launch_options")]
+    FieldNotFound(String, String),
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("serde_json error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
 }
 
-impl fmt::Display for StateError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            StateError::IoError(ref e) => f.write_str(e),
-            StateError::SerdeError(ref e) => f.write_str(e),
-        }
-    }
+
+//So, id like to move all serde_json and io errors into Request if possible, abstracting ftw!
+
+#[derive(Error, Debug)]
+pub enum AccountError {
+    #[error("could not find xui user-hash")]
+    CannotFindXUI,
+    //NEED TO ABSTRACT REQWEST TO REQUEST STILL HERE
+    #[error("reqwest error: {0}")]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("could not get authorisation code from microsoft services")]
+    AuthorisationCodeFailure,
+    //acccountsssss
+    #[error("could not find account `{0}`")]
+    CannotFindAccount(String),
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("serde_json error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
+    // #[error("io error: {0}")]
+    // OpenerError(#[from] opener::OpenError),
+    // #[error("io error: {0}")]
+    // UrlParseError(#[from] url::ParseError),
 }
 
-impl From<io::Error> for StateError {
-    fn from(e: io::Error) -> Self {
-        StateError::IoError(e.to_string())
-    }
+#[derive(Error, Debug)]
+pub enum DownloadError {
+    // #[error("pussy anyhow")]
+    // Temporary(#[from] anyhow::Error),
+    #[error("instance: `{0}` already exists")]
+    InstanceExists(String),
+    #[error("library: `{0}` has no classifiers")]
+    LibraryNoClassifiers(String),
+    #[error("game version: `{0}` not found")]
+    GameVersionNotFound(String),
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("launch options error: {0}")]
+    StateError(#[from] StateError),
+    #[error("serde_json error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error("reqwest error: {0}")]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("api error: {0}")]
+    ApiError(#[from] ApiError),
+    #[error("nizziel error: {0}")]
+    NizzielError(#[from] nizziel::Error),
+    #[error("temp")]
+    Temp,
 }
 
-impl From<serde_json::Error> for StateError {
-   fn from(e: serde_json::Error) -> Self {
-        StateError::SerdeError(e.to_string())
-   }	
+#[derive(Error, Debug)]
+pub enum ApiError {
+    #[error("loader does not exist for game version: `{0}`")]
+    LoaderDoesNotExistForGameVer(String),
+    #[error("cannot find latest version")]
+    CannotFindLatestVersion,
+    #[error("cannot find version `{0}`")]
+    CannotFindVersion(String),
+    #[error("io error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error("nizziel error: {0}")]
+    NizzielError(#[from] nizziel::Error),
+    #[error("reqwest error: {0}")]
+    ReqwestError(#[from] reqwest::Error),
 }
