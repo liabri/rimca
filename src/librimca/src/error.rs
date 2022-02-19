@@ -41,6 +41,8 @@ impl From<ApiError> for Error {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum ApiError {
+	SerdeError(String),
+	ReqwestError(String),
 	CannotFindLatestVersion,
 }
 
@@ -48,6 +50,20 @@ impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ApiError::CannotFindLatestVersion => f.write_str("cannot find latest version"),
+            ApiError::SerdeError(ref e) => f.write_str(e),
+            ApiError::ReqwestError(ref e) => f.write_str(e),
         }
     }
+}
+
+impl From<serde_json::Error> for ApiError {
+   fn from(e: serde_json::Error) -> Self {
+        ApiError::SerdeError(e.to_string())
+   }	
+}
+
+impl From<reqwest::Error> for ApiError {
+   fn from(e: reqwest::Error) -> Self {
+        ApiError::ReqwestError(e.to_string())
+   }
 }
