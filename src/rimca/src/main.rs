@@ -10,7 +10,7 @@ pub fn main() {
 			// if let Some(fabric) = dl.fabric {
 				// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
 			// } else {
-				rimca::Instance::<Vanilla>::with_version(dl.instance, dl.version.as_ref().map(|x| &**x)).unwrap().download().unwrap();
+				// rimca::Instance::<Vanilla>::with_version(dl.instance, dl.version.as_ref().map(|x| &**x)).unwrap().download().unwrap();
 			// }
         },
 

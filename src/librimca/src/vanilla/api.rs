@@ -22,14 +22,25 @@ pub fn versions(snapshots: bool) -> Result<Vec<Version>, ApiError> {
 		.collect())
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct VanillaLatest {
+	pub latest: Latest,
+}
 
-// pub fn latest(snapshot: bool) -> Result<Version, ApiError> {
-// 	let resp = reqwest::blocking::get(VERSION_MANIFEST_URL)?;
-// 	let van: VanillaLatest = serde_json::from_slice(&resp)?;
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Latest {
+	pub release: String,
+	pub snapshot: String
+}
 
-// 	Ok(versions(snapshot)?
-// 		.into_iter()
-// 		.filter(|v| v.id.eq(&van.latest.release) || v.id.eq(&van.latest.snapshot))
-// 		.next()
-// 		.ok_or(ApiError::CannotFindLatestVersion)?)
-// }
+
+pub fn latest(snapshot: bool) -> Result<Version, ApiError> {
+	let van = reqwest::blocking::get(VERSION_MANIFEST_URL)?
+		.json::<VanillaLatest>()?;
+
+	Ok(versions(snapshot)?
+		.into_iter()
+		.filter(|v| v.id.eq(&van.latest.release) || v.id.eq(&van.latest.snapshot))
+		.next()
+		.ok_or(ApiError::CannotFindLatestVersion)?)
+}

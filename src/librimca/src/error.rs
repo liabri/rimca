@@ -4,12 +4,20 @@ use thiserror::Error;
 pub enum Error {
     #[error("launch error: `{0}`")]
     LaunchError(#[from] LaunchError),
+    #[error("download error: `{0}`")]
+    DownloadError(#[from] DownloadError),
+    #[error("state error: `{0}`")]
+    StateError(#[from] StateError),
+    #[error("instance does not exist")]
+    InstanceDoesNotExist,
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
+    #[error("nizziel error: {0}")]
+    NizzielError(#[from] nizziel::Error),
 }
 
 #[derive(Error, Debug)]
 pub enum LaunchError {
-    // #[error("pussy anyhow")]
-    // Temporary(#[from] anyhow::Error),
     #[error("`{0}` arguments were not found")]
     ArgumentsNotFound(LaunchArguments),
     #[error("io error: {0}")]
@@ -17,7 +25,7 @@ pub enum LaunchError {
     #[error("account error: {0}")]
     AccountError(#[from] AccountError),
     #[error("state error: {0}")]
-    StateError(#[from] StateError)
+    StateError(#[from] StateError),
 }
 
 #[derive(Error, Debug)]

@@ -13,18 +13,21 @@ pub use vanilla::Vanilla;
 mod error;
 use error::Error;
 
+mod verify;
+
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct Instance<T> {
 	name: String,
-	path: PathBuf,
+	paths: HashMap<String, PathBuf>,
 	state: State,
 	inner: T,
 }
 
 impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 	fn delete(&self) -> Result<(), Error> {
-		Ok(std::fs::remove_dir_all(&self.path)?)
+		Ok(std::fs::remove_dir_all(&self.paths.get("instance").ok_or(Error::InstanceDoesNotExist)?)?)
 	}
 
 	pub fn launch(&self, username: &str) -> Result<(), Error> {
@@ -37,12 +40,22 @@ impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 }
 
 pub fn launch(name: &str, username: &str) -> Result<(), Error> {
-	let path = PathBuf::new().join(name);
-	let state = State::read(&path)?;
+	let mut paths = HashMap::new();
+	let instance_path = PathBuf::new().join(name);
+
+	let state = State::read(&instance_path)?;
+
+	paths.insert("instance".to_string(), instance_path);
 
 	let inner = match state.scenario.as_str() {
 		// "fabric" => Instance::<Fabric>::new(path, state, name.to_string()).launch(),
-		"vanilla" => Instance::<Vanilla>::new(path, state, name.to_string()).launch(),
+		"vanilla" => Instance::<Vanilla> { 
+			name: name.to_string(),
+			paths, 
+			state,
+			inner: Vanilla::new()
+		}.launch(),
+
 		_ => return Err(Error::InstanceDoesNotExist)
 	};
 
