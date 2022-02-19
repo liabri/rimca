@@ -26,7 +26,7 @@ impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 	}
 
 	pub fn launch(&self, username: &str) -> Result<(), Error> {
-		Ok(())
+		Ok(self.inner.launch()?)
 	}
 
 	pub fn download(&self) -> Result<(), Error> {
