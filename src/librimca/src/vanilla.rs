@@ -1,3 +1,6 @@
+use crate::download::{ DownloadSequence, Download };
+use crate::error::Error;
+
 pub struct Vanilla {
 	version: String,
 }
@@ -13,5 +16,15 @@ impl Vanilla {
 				version: String::from("get latest_version")
 			}
 		}
+	}
+}
+
+impl DownloadSequence for Download<Vanilla> {
+	fn commence(&self) -> Result<(), Error> {
+		Ok(())
+	}
+
+	fn spawn_thread(&self) -> Result<(), Error> {
+		Ok(())
 	}
 }
