@@ -1,0 +1,13 @@
+cargo-features = ["strip"]
+
+[workspace]
+members = [
+    "src/rimca",
+    "src/librimca",
+]
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
+strip = true 

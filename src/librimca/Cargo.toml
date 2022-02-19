@@ -1,0 +1,20 @@
+cargo-features = ["strip"]
+
+[package]
+name = "librimca"
+version = "0.1.0"
+authors = ["liabri"]
+edition = "2021"
+
+[lib]
+name = "rimca"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
+[dependencies]
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
+strip = true 
