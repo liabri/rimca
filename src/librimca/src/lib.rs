@@ -32,7 +32,7 @@ impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 	}
 
 	pub fn download(&self) -> Result<(), Error> {
-		self.inner.download()
+		Ok(self.inner.download()?)
 	}
 }
 
@@ -43,19 +43,6 @@ pub fn launch(name: &str, username: &str) -> Result<(), Error> {
 	let inner = match state.scenario.as_str() {
 		// "fabric" => Instance::<Fabric>::new(path, state, name.to_string()).launch(),
 		"vanilla" => Instance::<Vanilla>::new(path, state, name.to_string()).launch(),
-		_ => return Err(Error::InstanceDoesNotExist)
-	};
-
-	Ok(())
-}
-
-pub fn download(name: &str, username: &str) -> Result<(), Error> {
-	let path = PathBuf::new().join(name);
-	let state = State::read(&path)?;
-
-	let inner = match state.scenario.as_str() {
-		// "fabric" => Instance::<Fabric>::new(path, state, name.to_string()).download(),
-		"vanilla" => Instance::<Vanilla>::new(path, state, name.to_string()).download(),
 		_ => return Err(Error::InstanceDoesNotExist)
 	};
 
