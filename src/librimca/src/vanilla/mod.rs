@@ -9,7 +9,7 @@ use crate::error::{ Error, LaunchError };
 use std::path::PathBuf;
 
 pub struct Vanilla {
-	version: Option<String>,
+	pub version: Option<String>,
 	// meta: Meta,
 }
 
@@ -36,6 +36,18 @@ impl Vanilla {
 impl Instance<Vanilla> {
 	pub fn new(path: PathBuf, state: State, name: String) -> Self {
 		Self { name, path, inner: Vanilla::new(), state }
+	}
+
+	pub fn with_version(name: String, version: Option<&str>) -> Result<Self, Error> {
+		let path = PathBuf::new().join(&name);
+		let state = State::read(&path)?;
+
+		Ok(Self {
+			name,
+			path,
+			state,
+			inner: Vanilla::from_version(version),
+		})
 	}
 }
 
