@@ -168,13 +168,14 @@ impl LaunchSequence for Instance<Vanilla> {
 		let version = {
 			match self.state.get_component("net.minecraft")? {
 				Component::GameComponent { version, .. } => version,
-				_ => return Err(LaunchError::StateError(StateError::FieldNotFound("asset_index".to_string(), "net.minecraft".to_string())))
+				_ => return Err(LaunchError::StateError(StateError::FieldNotFound("version".to_string(), "net.minecraft".to_string())))
 			}
 		};
 
-		let meta_file = std::fs::File::open(self.paths.get("meta")
-			.ok_or(LaunchError::PathNotFound("instance".to_string()))?
-			.join("net.minecraft").with_file_name(version).with_extension("json"))?;
+
+		let meta_path = self.paths.get("meta").ok_or(LaunchError::PathNotFound("meta".to_string()))?
+			.join("net.minecraft").join(format!("{}.json", &version));
+		let meta_file = std::fs::File::open(&meta_path)?;
     	let reader = BufReader::new(meta_file);
 		Ok(serde_json::from_reader(reader)?)
  	}

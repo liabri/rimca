@@ -98,6 +98,8 @@ pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 	paths.insert("instance".to_string(), instance_path);
 	paths.insert("meta".to_string(), base_dir.join("meta")); 
 	paths.insert("assets".to_string(), base_dir.join("assets"));
+	paths.insert("libraries".to_string(), base_dir.join("libraries")); 
+
 
 	let inner = match state.scenario.as_str() {
 		// "fabric" => Instance::<Fabric>::new(path, state, name.to_string()).launch(),
@@ -106,7 +108,7 @@ pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 			paths, 
 			state,
 			inner: Vanilla::new()
-		}.launch(username),
+		}.launch(username)?,
 
 		_ => return Err(Error::InstanceDoesNotExist)
 	};
