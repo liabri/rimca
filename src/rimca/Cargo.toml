@@ -1,16 +1,9 @@
-cargo-features = ["strip"]
-
 [package]
 name = "rimca"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-
-[profile.release]
-opt-level = 'z'
-lto = true
-codegen-units = 1
-strip = true 
 
 [dependencies]
 librimca = { path = "../librimca" }
 structopt = "0.3.25"
+anyhow = "1.0.65"

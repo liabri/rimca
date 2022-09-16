@@ -1,22 +1,25 @@
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
-use rimca::{ Instance, Vanilla, DownloadSequence };
+// use anyhow::Result;
+use rimca::{ Error, Instance, Vanilla, DownloadSequence };
 
-pub fn main() {
+pub fn main() -> Result<(), Error> {
 	match Arguments::from_args().command {
 		// Command::Login => rimca::auth::Accounts::get().unwrap().new_account().unwrap(),
 		// Command::Delete{ instance } => Instance::get(&instance).delete().unwrap(),
         Command::Download(dl) => {
-			// if let Some(fabric) = dl.fabric {
-				// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
-			// } else {
-				// rimca::Instance::<Vanilla>::with_version(dl.instance, dl.version.as_ref().map(|x| &**x)).unwrap().download().unwrap();
-			// }
+			if let Some(fabric) = dl.fabric {
+                Ok(())
+			// 	// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
+			} else {
+                rimca::download(&dl.instance, dl.version.as_ref().map(|x| &**x))
+			// 	rimca::Instance::<Vanilla>::download(dl.instance/*, dl.version.as_ref().map(|x| &**x)*/).unwrap().download().unwrap();
+			}
         },
 
-        Command::Launch(l) => {
-        	rimca::launch(&l.instance, &l.username).unwrap();
-        },
+        // Command::Launch(l) => {
+        // 	rimca::launch(&l.instance, &l.username)
+        // },
 
   //       Command::List(List::Remote(Remote::Vanilla(v))) => {
   //       	for mut version in rimca::vanilla::api::versions(v.snapshot).unwrap().into_iter().rev() {
@@ -37,7 +40,7 @@ pub fn main() {
 		// 	}	
 		// },
 
-        _ => {}
+        _ => Ok(())
     }
 }
 

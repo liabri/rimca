@@ -18,6 +18,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.65"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98161a4e3e2184da77bb14f02184cdd111e83bbbcc9979dfee3c44b9a85f5602"
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -503,7 +509,7 @@ checksum = "06e509672465a0504304aa87f9f176f2b2b716ed8fb105ebe5c02dc6dce96a94"
 
 [[package]]
 name = "librimca"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "nizziel",
  "reqwest",
@@ -785,8 +791,9 @@ dependencies = [
 
 [[package]]
 name = "rimca"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
+ "anyhow",
  "librimca",
  "structopt",
 ]
