@@ -13,16 +13,23 @@ pub struct Version {
 	pub release_time: String
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Manifest {
+	latest: Latest,
+	versions: Vec<Version>
+}
+
 pub fn versions(snapshots: bool) -> Result<Vec<Version>, ApiError> {
-	let versions = reqwest::blocking::get(VERSION_MANIFEST_URL)?
-		.json::<Vec<Version>>()?;
-	Ok(versions
+	let manifest = reqwest::blocking::get(VERSION_MANIFEST_URL)?
+		.json::<Manifest>().unwrap();
+
+	Ok(manifest.versions
 		.into_iter()
 		.filter(|v| !(v.r#type.eq("snapshot")==true && !snapshots))
 		.collect())
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct VanillaLatest {
 	pub latest: Latest,
 }

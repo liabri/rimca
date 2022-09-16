@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use crate::error::StateError;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct State {
 	pub scenario: String,
 	pub components: HashMap<String, Component>,
@@ -13,7 +13,7 @@ pub struct State {
 	pub prelaunch_cmds: Option<Vec<String>>
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum Component {
     GameComponent { 
@@ -28,7 +28,23 @@ pub enum Component {
 }
 
 impl State {
+    pub fn from_scenario(scenario: String) -> Self {
+        State {
+            scenario,
+            components: HashMap::new(),
+            wrapper: None,
+            prelaunch_cmds: None
+        }
+    }
+
+    pub fn get_component(&self, key: &str) -> Result<&Component, StateError> {
+        self.components.get(key).ok_or(StateError::ComponentNotFound(String::from(key)))
+    }
+
     pub fn write(&self, instance_path: &Path) -> Result<(), StateError> {
+
+        println!("Writing state: {:?}", self);
+
         let path = instance_path.join("state.json");
         let file = File::create(&path)?;
         let reader: BufReader<File> = BufReader::new(file);
@@ -42,7 +58,7 @@ impl State {
 
     pub fn read(instance_path: &Path) -> Result<Self, StateError> {
         let path = instance_path.join("state.json");
-        let file = File::create(&path)?;
+        let file = File::open(&path)?;
         let reader = BufReader::new(file);
         let options: Self = serde_json::from_reader(reader)?;
         Ok(options)

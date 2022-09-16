@@ -26,6 +26,10 @@ pub enum LaunchError {
     AccountError(#[from] AccountError),
     #[error("state error: {0}")]
     StateError(#[from] StateError),
+    #[error("path `{0}` not found")]
+    PathNotFound(String),
+    #[error("serde_json error: {0}")]
+    SerdeJsonError(#[from] serde_json::Error),
 }
 
 #[derive(Error, Debug)]
@@ -47,11 +51,11 @@ impl std::fmt::Display for LaunchArguments {
 pub enum StateError {
     #[error("scenario could not be found")]
     ScenarioDoesNotExist,
-    #[error("the launch_options file cannot be found for instance: `{0}`")]
+    #[error("the state.json file cannot be found for instance: `{0}`")]
     CannotFind(String),
-    #[error("cannot find component: `{0}` in launch_options")]
+    #[error("cannot find component: `{0}` in state.json")]
     ComponentNotFound(String),
-    #[error("cannot find field: `{0}` in component: `{1}` in launch_options")]
+    #[error("cannot find field: `{0}` in component: `{1}` in state.json")]
     FieldNotFound(String, String),
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),
@@ -108,6 +112,8 @@ pub enum DownloadError {
     NizzielError(#[from] nizziel::Error),
     #[error("temp")]
     Temp,
+    #[error("path `{0}` not found")]
+    PathNotFound(String),
 }
 
 #[derive(Error, Debug)]

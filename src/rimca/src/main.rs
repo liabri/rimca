@@ -3,23 +3,22 @@ use structopt::clap::AppSettings;
 // use anyhow::Result;
 use rimca::{ Error, Instance, Vanilla, DownloadSequence };
 
-pub fn main() -> Result<(), Error> {
+pub fn main() {
 	match Arguments::from_args().command {
 		// Command::Login => rimca::auth::Accounts::get().unwrap().new_account().unwrap(),
 		// Command::Delete{ instance } => Instance::get(&instance).delete().unwrap(),
         Command::Download(dl) => {
 			if let Some(fabric) = dl.fabric {
-                Ok(())
 			// 	// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
 			} else {
-                rimca::download(&dl.instance, dl.version.as_ref().map(|x| &**x))
+                rimca::download(&dl.instance).unwrap()
 			// 	rimca::Instance::<Vanilla>::download(dl.instance/*, dl.version.as_ref().map(|x| &**x)*/).unwrap().download().unwrap();
 			}
         },
 
-        // Command::Launch(l) => {
-        // 	rimca::launch(&l.instance, &l.username)
-        // },
+        Command::Launch(l) => {
+        	rimca::launch(&l.instance, &l.username).unwrap()
+        },
 
   //       Command::List(List::Remote(Remote::Vanilla(v))) => {
   //       	for mut version in rimca::vanilla::api::versions(v.snapshot).unwrap().into_iter().rev() {
@@ -40,7 +39,7 @@ pub fn main() -> Result<(), Error> {
 		// 	}	
 		// },
 
-        _ => Ok(())
+        _ => {}
     }
 }
 
@@ -83,6 +82,7 @@ pub enum Command {
     Logout { username: String },
 }
 
+#[derive(Debug)]
 #[derive(StructOpt)]
 pub struct Download {
     pub instance: String,

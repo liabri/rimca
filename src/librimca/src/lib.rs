@@ -31,7 +31,7 @@ impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 	}
 
 	fn launch(&self, username: &str) -> Result<(), Error> {
-		Ok(self.inner.launch()?)
+		Ok(self.inner.launch(username)?)
 	}
 
 	fn download(&self) -> Result<(), Error> {
@@ -57,26 +57,56 @@ impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 	// }
 }
 
-pub fn download(name: &str, version: Option<&str>) -> Result<(), Error> {
-	todo!()
+pub fn download(instance: &str/*, version: Option<&str>*/) -> Result<(), Error> {
+	let mut paths = HashMap::new();
+	let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
+	let instance_path = base_dir.join("instances").join(instance);
+
+	std::fs::create_dir_all(&instance_path);
+
+	paths.insert("natives".to_string(), instance_path.join("natives")); 
+	paths.insert("instance".to_string(), instance_path);
+	paths.insert("meta".to_string(), base_dir.join("meta")); 
+	paths.insert("assets".to_string(), base_dir.join("assets")); 
+	paths.insert("libraries".to_string(), base_dir.join("libraries")); 
+
+	// kinda shady to make an empty one just to write a completely different one later.
+	let state = State::from_scenario(String::from("vanilla"));
+
+	let inner = match state.scenario.as_str() {
+		"vanilla" => Instance::<Vanilla> { 
+			name: instance.to_string(),
+			paths, 
+			state,
+			inner: Vanilla::new()
+		}.download()?,
+
+		_ => return Err(Error::InstanceDoesNotExist)
+	};
+
+	Ok(())
 }
 
-pub fn launch(name: &str, username: &str) -> Result<(), Error> {
+pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 	let mut paths = HashMap::new();
-	let instance_path = PathBuf::new().join(name);
+	let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
+	let instance_path = base_dir.join("instances").join(instance);
 
 	let state = State::read(&instance_path)?;
-
+	paths.insert("resources".to_string(), instance_path.join("resources")); 
+	paths.insert("natives".to_string(), instance_path.join("natives"));
 	paths.insert("instance".to_string(), instance_path);
+	paths.insert("meta".to_string(), base_dir.join("meta")); 
+	paths.insert("assets".to_string(), base_dir.join("assets"));
 
 	let inner = match state.scenario.as_str() {
 		// "fabric" => Instance::<Fabric>::new(path, state, name.to_string()).launch(),
 		"vanilla" => Instance::<Vanilla> { 
-			name: name.to_string(),
+			name: instance.to_string(),
 			paths, 
 			state,
 			inner: Vanilla::new()
-		}.launch(),
+		}.launch(username),
 
 		_ => return Err(Error::InstanceDoesNotExist)
 	};
