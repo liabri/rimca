@@ -14,6 +14,8 @@ pub enum Error {
     IoError(#[from] std::io::Error),
     #[error("nizziel error: {0}")]
     NizzielError(#[from] nizziel::Error),
+    #[error("path error: {0}")]
+    PathError(#[from] PathError),
 }
 
 #[derive(Error, Debug)]
@@ -26,11 +28,18 @@ pub enum LaunchError {
     AccountError(#[from] AccountError),
     #[error("state error: {0}")]
     StateError(#[from] StateError),
-    #[error("path `{0}` not found")]
-    PathNotFound(String),
+    #[error("path error: {0}")]
+    PathError(#[from] PathError),
     #[error("serde_json error: {0}")]
     SerdeJsonError(#[from] serde_json::Error),
 }
+
+#[derive(Error, Debug)]
+pub enum PathError {
+    #[error("path `{0}` not found")]
+    NotFound(String),
+}
+
 
 #[derive(Error, Debug)]
 pub enum LaunchArguments {
@@ -70,12 +79,10 @@ pub enum StateError {
 pub enum AccountError {
     #[error("could not find xui user-hash")]
     CannotFindXUI,
-    //NEED TO ABSTRACT REQWEST TO REQUEST STILL HERE
     #[error("reqwest error: {0}")]
     ReqwestError(#[from] reqwest::Error),
     #[error("could not get authorisation code from microsoft services")]
     AuthorisationCodeFailure,
-    //acccountsssss
     #[error("could not find account `{0}`")]
     CannotFindAccount(String),
     #[error("io error: {0}")]
@@ -110,10 +117,8 @@ pub enum DownloadError {
     ApiError(#[from] ApiError),
     #[error("nizziel error: {0}")]
     NizzielError(#[from] nizziel::Error),
-    #[error("temp")]
-    Temp,
-    #[error("path `{0}` not found")]
-    PathNotFound(String),
+    #[error("path error: {0}")]
+    PathError(#[from] PathError),
 }
 
 #[derive(Error, Debug)]
