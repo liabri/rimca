@@ -69,20 +69,6 @@ pub fn download(instance: &str/*, version: Option<&str>*/) -> Result<(), Error> 
 	Ok(())
 }
 
-
-use crate::error::PathError;
-pub struct Paths(HashMap<String, PathBuf>);
-
-impl Paths {
-	pub fn get(&self, key: &str) -> Result<&PathBuf, PathError> {
-        self.0.get(key).ok_or(PathError::NotFound(String::from(key)))
-	}
-
-	pub fn new() -> Self {
-		Paths(HashMap::new())
-	}
-}
-
 pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 	let mut paths = Paths::new();
 	let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
@@ -110,4 +96,17 @@ pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 	};
 
 	Ok(())
+}
+
+use crate::error::PathError;
+pub struct Paths(HashMap<String, PathBuf>);
+
+impl Paths {
+	pub fn get(&self, key: &str) -> Result<&PathBuf, PathError> {
+        self.0.get(key).ok_or(PathError::NotFound(String::from(key)))
+	}
+
+	pub fn new() -> Self {
+		Paths(HashMap::new())
+	}
 }

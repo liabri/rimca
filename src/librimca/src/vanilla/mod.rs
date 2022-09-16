@@ -252,7 +252,7 @@ impl LaunchSequence for Instance<Vanilla> {
 			if let Some(arguments) = meta.arguments.get("jvm") {
 				arguments.iter().map(|x| x
 						.replace("${natives_directory}", &natives_directory.to_str().unwrap())
-						.replace("${launcher_name}", "mcrs")
+						.replace("${launcher_name}", "rimca")
 						.replace("${launcher_version}", "3.0")
 						.replace("${classpath}", classpath)
 				).collect()
