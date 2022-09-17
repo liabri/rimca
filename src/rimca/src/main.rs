@@ -16,6 +16,11 @@ pub fn main() {
 			}
         },
 
+
+        SOSH
+        SOSH
+        SOSH
+
         Command::Launch(l) => {
         	rimca::launch(&l.instance, &l.username).unwrap()
         },

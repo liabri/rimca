@@ -61,10 +61,9 @@ impl DownloadSequence for Instance<Vanilla> {
 			None => api::latest(false)?
 		};
 
-		// impl default for 	
 		dls.retries = 5;
 
-		//check if exists locally before making 
+		//check if exists locally before requesting 
 		let meta_str = nizziel::blocking::download(&version.url, &self.paths.get("meta")?.join("net.minecraft").join(format!("{}.json", &version.id)), false)?;
 		let meta: Meta = serde_json::from_slice(&meta_str)?;
 
@@ -78,12 +77,10 @@ impl DownloadSequence for Instance<Vanilla> {
 			});
 		}
 
-		// let natives_dir = paths::natives(&self.instance());
 		let natives_dir = self.paths.get("natives")?;
 		for lib in meta.libraries {
 			if let Some(artifact) = lib.downloads.artifact {
 				let path = self.paths.get("libraries")?.join(artifact.path);
-				// let path = LIBRARIES_DIR.join(artifact.path);
 				if !path.exists() || !is_file_valid(&path, &artifact.sha1)? {
 					dls.downloads.push(Download{
 						url: artifact.url,
@@ -93,24 +90,20 @@ impl DownloadSequence for Instance<Vanilla> {
 				}
 			}
 
-			//verify this
-			// if !self.verify {
-				if let Some(key) = lib.natives.and_then(|n| n.linux) {
-					if let Some(url) = &lib.downloads.classifiers.ok_or(DownloadError::LibraryNoClassifiers(lib.name))?.get(&key) {
-						dls.downloads.push(Download {
-							url: url.url.to_string(),
-							path: natives_dir.clone(),
-							unzip: true
-						});	
-					}			
-				}
-			// }
+			if let Some(key) = lib.natives.and_then(|n| n.linux) {
+				if let Some(url) = &lib.downloads.classifiers.ok_or(DownloadError::LibraryNoClassifiers(lib.name))?.get(&key) {
+					dls.downloads.push(Download {
+						url: url.url.to_string(),
+						path: natives_dir.clone(),
+						unzip: true
+					});	
+				}			
+			}
 		}
 
 		let asset_id = meta.asset_index.id;
 		let url = meta.asset_index.url;
 		let path = self.paths.get("assets")?.join("indexes").join(format!("{}.json", asset_id));
-		// let path = ASSETS_DIR.join("indexes").join(format!("{}.json", asset_id));
 
 		let ajson_resp = nizziel::blocking::download(&url, &path, false)?;
 		let assets: Assets = serde_json::from_slice(&ajson_resp)?;
@@ -119,7 +112,6 @@ impl DownloadSequence for Instance<Vanilla> {
 			for (key, hash) in assets.objects {
 				let hash_head = &hash.hash[0..2];
 				let path = self.paths.get("instance")?.join("resources").join(key);
-				// let path = paths::instance(&self.instance()).join("resources").join(key);
 
 				if !path.exists() && is_file_valid(&path, &hash.hash)? {
 					dls.downloads.push(Download {
@@ -131,7 +123,6 @@ impl DownloadSequence for Instance<Vanilla> {
 			}
 		} else {
 			let objects_dir = self.paths.get("assets")?.join("objects");
-			// let objects_dir = ASSETS_DIR.join("objects");
 			for hash in assets.objects.values() {
 				let hash_head = &hash.hash[0..2];
 				let path = objects_dir.join(&hash_head).join(&hash.hash);
@@ -187,7 +178,6 @@ impl LaunchSequence for Instance<Vanilla> {
 			let arguments = meta.arguments.get("game").ok_or(LaunchError::ArgumentsNotFound(LaunchArguments::Game))?;
 			// let account = crate::auth::Accounts::get()?.get_account(self.username()).unwrap_or(auth::Account::default());
 
-			// //make nicer
 			return Ok(arguments.iter().map(|x| x
 					.replace("${auth_player_name}", username)
 					.replace("${version_name}", version)
