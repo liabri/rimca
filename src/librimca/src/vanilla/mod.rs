@@ -21,34 +21,16 @@ pub struct Vanilla {
 	pub version: Option<String>,
 }
 
-impl Vanilla {
-	pub fn new() -> Self {
+impl From<Option<String>> for Vanilla {
+	fn from(version: Option<String>) -> Self {
 		Self {
-			version: None
-		}
-	}
-
-	pub fn from_version(version: Option<&str>) -> Self {
-		if let Some(version) = version {
-			return Self {
-				version: Some(version.to_string())
-			}
-		} else {
-			return Self {
-				version: Some(String::from("get latest_version"))
-			}
+			version
 		}
 	}
 }
 
 impl DownloadSequence for Instance<Vanilla> {
-	fn download(&self) -> Result<(), DownloadError> {
-		self.spawn_thread(self.collect_urls()?)
-	}
-
-	fn collect_urls(&self) -> Result<Downloads, DownloadError> {
-		let mut dls = Downloads::default();
-
+	fn collect_urls(&mut self) -> Result<Downloads, DownloadError> {
 		let version = match &self.inner.version {
 			Some(ver) => {
 				api::versions(true)?
@@ -61,13 +43,14 @@ impl DownloadSequence for Instance<Vanilla> {
 			None => api::latest(false)?
 		};
 
+		let mut dls = Downloads::default();
 		dls.retries = 5;
 
-		//check if exists locally before requesting 
+		// get meta file, used to get libraries, natives & assets -- in that order
 		let meta_str = nizziel::blocking::download(&version.url, &self.paths.get("meta")?.join("net.minecraft").join(format!("{}.json", &version.id)), false)?;
 		let meta: Meta = serde_json::from_slice(&meta_str)?;
 
-		//version_jar
+		// version.jar
 		let path = self.paths.get("libraries")?.join("com").join("mojang").join("minecraft").join(&version.id).join(format!("minecraft-{}-client.jar", &version.id));
 		if !path.exists() || !is_file_valid(&path, &meta.downloads.client.sha1)? {
 			dls.downloads.push(Download {
@@ -79,6 +62,7 @@ impl DownloadSequence for Instance<Vanilla> {
 
 		let natives_dir = self.paths.get("natives")?;
 		for lib in meta.libraries {
+			// libraries
 			if let Some(artifact) = lib.downloads.artifact {
 				let path = self.paths.get("libraries")?.join(artifact.path);
 				if !path.exists() || !is_file_valid(&path, &artifact.sha1)? {
@@ -90,6 +74,7 @@ impl DownloadSequence for Instance<Vanilla> {
 				}
 			}
 
+			// natives (pre 1.19)
 			if let Some(key) = lib.natives.and_then(|n| n.linux) {
 				if let Some(url) = &lib.downloads.classifiers.ok_or(DownloadError::LibraryNoClassifiers(lib.name))?.get(&key) {
 					dls.downloads.push(Download {
@@ -101,6 +86,7 @@ impl DownloadSequence for Instance<Vanilla> {
 			}
 		}
 
+		// assets
 		let asset_id = meta.asset_index.id;
 		let url = meta.asset_index.url;
 		let path = self.paths.get("assets")?.join("indexes").join(format!("{}.json", asset_id));
@@ -127,7 +113,7 @@ impl DownloadSequence for Instance<Vanilla> {
 				let hash_head = &hash.hash[0..2];
 				let path = objects_dir.join(&hash_head).join(&hash.hash);
 
-				if !path.exists() { //&& is_file_valid(&path, &hash.hash) {
+				if !path.exists() {
 					dls.downloads.push(Download{
 						url: format!("https://resources.download.minecraft.net/{}/{}", hash_head, hash.hash),
 						path: path,
@@ -137,19 +123,26 @@ impl DownloadSequence for Instance<Vanilla> {
 			}
 		}
 
-		// create state.json
-		let mut state = State {
-			scenario: "vanilla".to_string(),
-			components: HashMap::new(),
-			wrapper: None,
-			prelaunch_cmds: None,
-		};
-
-		state.components.insert("java".to_string(), Component::JavaComponent { path: "java".to_string(), arguments: None });
-		state.components.insert("net.minecraft".to_string(), Component::GameComponent { asset_index: Some(asset_id), version: version.id });
-		state.write(&self.paths.get("instance")?)?;
+		self.create_state(asset_id)?;
 
 		return Ok(dls)
+	}
+
+	fn create_state(&mut self, asset_id: String) -> Result<(), DownloadError> {
+		let java = Component::JavaComponent { 
+			path: "java".to_string(), 
+			arguments: None 
+		};
+
+		let game = Component::GameComponent { 
+			asset_index: Some(asset_id), 
+			version: self.inner.version.as_ref().ok_or(DownloadError::VersionNotSpecified)?.to_string()
+		};
+
+		self.state.components.insert("java".to_string(), java);
+		self.state.components.insert("net.minecraft".to_string(), game);
+		self.state.write(&self.paths.get("instance")?)?;
+		Ok(())
 	}
 }
 

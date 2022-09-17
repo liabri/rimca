@@ -34,15 +34,15 @@ impl<T: LaunchSequence + DownloadSequence> Instance<T> {
 		Ok(self.inner.launch(username)?)
 	}
 
-	fn download(&self) -> Result<(), Error> {
+	fn download(&mut self) -> Result<(), Error> {
 		Ok(self.inner.download()?)
 	}
 }
 
-pub fn download(instance: &str/*, version: Option<&str>*/) -> Result<(), Error> {
+pub fn download(instance: String, version: Option<String>) -> Result<(), Error> {
 	let mut paths = Paths::new();
 	let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
-	let instance_path = base_dir.join("instances").join(instance);
+	let instance_path = base_dir.join("instances").join(&instance);
 
 	std::fs::create_dir_all(&instance_path);
 
@@ -57,10 +57,10 @@ pub fn download(instance: &str/*, version: Option<&str>*/) -> Result<(), Error> 
 
 	let inner = match state.scenario.as_str() {
 		"vanilla" => Instance::<Vanilla> { 
-			name: instance.to_string(),
+			name: instance,
 			paths, 
 			state,
-			inner: Vanilla::new()
+			inner: Vanilla::from(version)
 		}.download()?,
 
 		_ => return Err(Error::InstanceDoesNotExist)
@@ -89,7 +89,7 @@ pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 			name: instance.to_string(),
 			paths, 
 			state,
-			inner: Vanilla::new()
+			inner: Vanilla::from(None)
 		}.launch(username)?,
 
 		_ => return Err(Error::InstanceDoesNotExist)

@@ -3,16 +3,16 @@ use crate::error::DownloadError;
 use nizziel::{ download, Downloads };
 
 pub trait DownloadSequence {
-	fn download(&self) -> Result<(), DownloadError>;
-	fn collect_urls(&self) -> Result<Downloads, DownloadError>;
-	fn spawn_thread(&self, dls: Downloads) -> Result<(), DownloadError> {
-				// if self.verify {
-		// 	log::info!("Verified integrity of game files")
-		// } else {
-			// log::info!("Downloading files");
-		// }
+	fn collect_urls(&mut self) -> Result<Downloads, DownloadError>;
+	fn create_state(&mut self, asset_id: String) -> Result<(), DownloadError>;
 
-		println!("Downloading!!");
+	fn download(&mut self) -> Result<(), DownloadError> {
+		let urls = self.collect_urls()?;
+		self.spawn_thread(urls)
+	}
+
+	fn spawn_thread(&mut self, dls: Downloads) -> Result<(), DownloadError> {
+		println!("Downloading!");
 
 		let before = std::time::Instant::now();
 		let rt = tokio::runtime::Builder::new_multi_thread()
@@ -27,9 +27,7 @@ pub trait DownloadSequence {
 			}
 		);
 
-
 		println!("Time taken: {:.2?}", before.elapsed());
-		// log::info!("Time taken: {:.2?}", before.elapsed());
 		Ok(())		
 	}
 }

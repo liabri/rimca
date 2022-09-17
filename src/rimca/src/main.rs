@@ -11,15 +11,15 @@ pub fn main() {
 			if let Some(fabric) = dl.fabric {
 			// 	// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
 			} else {
-                rimca::download(&dl.instance).unwrap()
+                rimca::download(dl.instance, dl.version).unwrap()
 			// 	rimca::Instance::<Vanilla>::download(dl.instance/*, dl.version.as_ref().map(|x| &**x)*/).unwrap().download().unwrap();
 			}
         },
 
 
-        SOSH
-        SOSH
-        SOSH
+        // SOSH
+        // SOSH
+        // SOSH
 
         Command::Launch(l) => {
         	rimca::launch(&l.instance, &l.username).unwrap()

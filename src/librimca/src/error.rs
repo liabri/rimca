@@ -97,14 +97,14 @@ pub enum AccountError {
 
 #[derive(Error, Debug)]
 pub enum DownloadError {
-    // #[error("pussy anyhow")]
-    // Temporary(#[from] anyhow::Error),
     #[error("instance: `{0}` already exists")]
     InstanceExists(String),
     #[error("library: `{0}` has no classifiers")]
     LibraryNoClassifiers(String),
     #[error("game version: `{0}` not found")]
     GameVersionNotFound(String),
+    #[error("no game version was specified")]
+    VersionNotSpecified,
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("launch options error: {0}")]
