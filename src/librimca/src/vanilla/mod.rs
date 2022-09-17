@@ -1,20 +1,17 @@
-mod api;
+pub mod api;
 
 pub mod models;
-use models::{ Meta, Library, Assets };
+use models::{ Meta, Assets };
 
 use crate::Instance;
-use crate::state::State;
 use crate::download::DownloadSequence;
 use crate::launch::LaunchSequence;
-use crate::error::{ Error, LaunchError, LaunchArguments, DownloadError, StateError };
+use crate::error::{ LaunchError, LaunchArguments, DownloadError, StateError };
 use crate::state::Component;
 use crate::verify::is_file_valid;
 
 use std::process::Command;
 use std::io::BufReader;
-use std::collections::HashMap;
-use std::path::PathBuf;
 use nizziel::{ Download, Downloads };
 
 pub struct Vanilla {
@@ -91,8 +88,8 @@ impl DownloadSequence for Instance<Vanilla> {
 		let url = meta.asset_index.url;
 		let path = self.paths.get("assets")?.join("indexes").join(format!("{}.json", asset_id));
 
-		let ajson_resp = nizziel::blocking::download(&url, &path, false)?;
-		let assets: Assets = serde_json::from_slice(&ajson_resp)?;
+		let assets_str = nizziel::blocking::download(&url, &path, false)?;
+		let assets: Assets = serde_json::from_slice(&assets_str)?;
 
 		if asset_id.eq("pre-1.6") || asset_id.eq("legacy") {
 			for (key, hash) in assets.objects {
@@ -154,7 +151,6 @@ impl LaunchSequence for Instance<Vanilla> {
 				_ => return Err(LaunchError::StateError(StateError::FieldNotFound("version".to_string(), "net.minecraft".to_string())))
 			}
 		};
-
 
 		let meta_path = self.paths.get("meta")?
 			.join("net.minecraft").join(format!("{}.json", &version));

@@ -1,19 +1,17 @@
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
-// use anyhow::Result;
-use rimca::{ Error, Instance, Vanilla, DownloadSequence };
 
 pub fn main() {
 	match Arguments::from_args().command {
 		// Command::Login => rimca::auth::Accounts::get().unwrap().new_account().unwrap(),
 		// Command::Delete{ instance } => Instance::get(&instance).delete().unwrap(),
         Command::Download(dl) => {
-			if let Some(fabric) = dl.fabric {
+			// if let Some(fabric) = dl.fabric {
 			// 	// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
-			} else {
+			// } else {
                 rimca::download(dl.instance, dl.version).unwrap()
 			// 	rimca::Instance::<Vanilla>::download(dl.instance/*, dl.version.as_ref().map(|x| &**x)*/).unwrap().download().unwrap();
-			}
+			// }
         },
 
 
@@ -25,12 +23,12 @@ pub fn main() {
         	rimca::launch(&l.instance, &l.username).unwrap()
         },
 
-  //       Command::List(List::Remote(Remote::Vanilla(v))) => {
-  //       	for mut version in rimca::vanilla::api::versions(v.snapshot).unwrap().into_iter().rev() {
-		// 		version.release_time.truncate(version.release_time.find("T").unwrap());
-		// 		println!("{0: <20} {1: <15} {2: <25}", version.id, version.r#type, version.release_time);
-		// 	}
-		// },
+        Command::List(List::Remote(Remote::Vanilla(v))) => {
+        	for mut version in rimca::vanilla::api::versions(v.snapshot).unwrap().into_iter().rev() {
+				version.release_time.truncate(version.release_time.find("T").unwrap());
+				println!("{0: <20} {1: <15} {2: <25}", version.id, version.r#type, version.release_time);
+			}
+		},
 
   //       Command::List(List::Remote(Remote::Fabric(_))) => {
 		// 	for version in rimca::fabric::api::loaders().unwrap().into_iter().rev() {
@@ -38,11 +36,11 @@ pub fn main() {
 		// 	}
 		// },
 
-  //       Command::List(List::Local) => {
-		//     for instance in rimca::list_instances().unwrap() {
-		// 		println!("{}", instance.as_str());
-		// 	}	
-		// },
+        Command::List(List::Local) => {
+		 //    for instance in rimca::list_instances().unwrap() {
+			// 	println!("{}", instance.as_str());
+			// }	
+		},
 
         _ => {}
     }
