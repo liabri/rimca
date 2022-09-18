@@ -13,12 +13,11 @@ pub fn main() {
             let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
 
 
-			// if let Some(fabric) = dl.fabric {
-			// 	// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
-			// } else {
+			if let Some(fabric) = dl.fabric {
+                rimca::download(&dl.instance, dl.version, Some(String::from("fabric")), &base_dir).unwrap()
+			} else {
                 rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &base_dir).unwrap()
-			// 	rimca::Instance::<Vanilla>::download(dl.instance/*, dl.version.as_ref().map(|x| &**x)*/).unwrap().download().unwrap();
-			// }
+			}
         },
 
 

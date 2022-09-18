@@ -33,6 +33,7 @@ impl<T> Instance<T> {
     fn get(state: State, paths: Paths, version: Option<String>) -> Result<Box<dyn InstanceTrait>, Error> {
         match state.scenario.as_ref() { 
             "vanilla" => Ok(Box::new(Instance::<Vanilla> { paths, state, inner: Vanilla::from(version) })),
+            "fabric" => Ok(Box::new(Instance::<Fabric> { paths, state, inner: Fabric::from(Vanilla::from(version)) })),
             _ => Err(Error::StateError(StateError::ScenarioDoesNotExist(String::from(state.scenario))))
         }
     }   
