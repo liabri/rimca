@@ -10,6 +10,9 @@ pub use launch::LaunchSequence;
 pub mod vanilla;
 pub use vanilla::Vanilla;
 
+pub mod fabric;
+pub use fabric::Fabric;
+
 mod error;
 pub use error::{ Error, StateError };
 

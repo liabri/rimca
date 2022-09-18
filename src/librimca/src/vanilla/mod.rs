@@ -1,7 +1,7 @@
 pub mod api;
 
 pub mod models;
-use models::{ Meta, Assets };
+pub use models::{ Meta, Assets };
 
 use crate::Instance;
 use crate::download::DownloadSequence;
@@ -120,6 +120,7 @@ impl DownloadSequence for Instance<Vanilla> {
             }
         }
 
+        self.inner.version = Some(version.id);
         self.create_state(asset_id)?;
 
         return Ok(dls)
