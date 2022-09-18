@@ -58,8 +58,8 @@ impl std::fmt::Display for LaunchArguments {
 
 #[derive(Error, Debug)]
 pub enum StateError {
-    #[error("scenario could not be found")]
-    ScenarioDoesNotExist,
+    #[error("scenario `{0}` does not exist")]
+    ScenarioDoesNotExist(String),
     #[error("the state.json file cannot be found for instance: `{0}`")]
     CannotFind(String),
     #[error("cannot find component: `{0}` in state.json")]

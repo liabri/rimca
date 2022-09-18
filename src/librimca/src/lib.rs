@@ -11,7 +11,7 @@ pub mod vanilla;
 pub use vanilla::Vanilla;
 
 mod error;
-pub use error::Error;
+pub use error::{ Error, StateError };
 
 mod verify;
 
@@ -26,43 +26,34 @@ pub struct Instance<T> {
 	inner: T,
 }
 
-impl<T: LaunchSequence + DownloadSequence> Instance<T> {
-	// fn delete(&self) -> Result<(), Error> {
-	// 	Ok(std::fs::remove_dir_all(&self.paths.get("instance")?)?)
-	// }
+pub trait InstanceTrait: LaunchSequence + DownloadSequence {}
+impl<T> InstanceTrait for T where T: LaunchSequence + DownloadSequence {}
 
-	// fn launch(&self, username: &str) -> Result<(), Error> {
-	// 	Ok(self.inner.launch(username)?)
-	// }
-
-	// fn download(&mut self) -> Result<(), Error> {
-	// 	Ok(self.inner.download()?)
-	// }
+impl<T> Instance<T> {
+	fn get(state: State, paths: Paths, version: Option<String>) -> Result<Box<dyn InstanceTrait>, Error> {
+		match state.scenario.as_ref() { 
+			"vanilla" => Ok(Box::new(Instance::<Vanilla> { paths, state, inner: Vanilla::from(version) })),
+		  	_ => Err(Error::StateError(StateError::ScenarioDoesNotExist(String::from(state.scenario))))
+		}
+	}	
 }
 
-pub fn download(instance: String, version: Option<String>) -> Result<(), Error> {
+pub fn download(instance: String, version: Option<String>, scenario: Option<String>) -> Result<(), Error> {
 	let mut paths = Paths::new();
 	let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
 	let instance_path = base_dir.join("instances").join(&instance);
-
 	std::fs::create_dir_all(&instance_path)?;
 
-	let state = State::from_scenario(String::from("vanilla"));
 	paths.0.insert("natives".to_string(), instance_path.join("natives")); 
 	paths.0.insert("instance".to_string(), instance_path);
 	paths.0.insert("meta".to_string(), base_dir.join("meta")); 
 	paths.0.insert("assets".to_string(), base_dir.join("assets")); 
 	paths.0.insert("libraries".to_string(), base_dir.join("libraries")); 
 
-	match state.scenario.as_str() {
-		"vanilla" => Instance::<Vanilla> { 
-			paths, 
-			state,
-			inner: Vanilla::from(version)
-		}.download()?,
+	let scenario = scenario.unwrap_or("vanilla".to_string());
+	let state = State::from_scenario(scenario);
 
-		_ => return Err(Error::InstanceDoesNotExist)
-	};
+	Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.download();
 
 	Ok(())
 }
@@ -80,17 +71,9 @@ pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 	paths.0.insert("assets".to_string(), base_dir.join("assets"));
 	paths.0.insert("libraries".to_string(), base_dir.join("libraries")); 
 
+	let state = State::read(&paths.get("instance")?)?;	
 
-	match state.scenario.as_str() {
-		// "fabric" => Instance::<Fabric>::new(path, state, name.to_string()).launch(),
-		"vanilla" => Instance::<Vanilla> { 
-			paths, 
-			state,
-			inner: Vanilla::from(None)
-		}.launch(username)?,
-
-		_ => return Err(Error::InstanceDoesNotExist)
-	};
+	Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.launch(username);
 
 	Ok(())
 }
