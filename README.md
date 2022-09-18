@@ -9,7 +9,8 @@ As I run my servers in `offline-mode` due to the fact I often play in areas with
 In addition, I do not like the direction in which Mojang is going and/or has taken, especially after the 1.19.1 update, which is just extra motivation to not rely on their services as much as possible.
 
 ## usage
-```rimca 0.2.0
+```
+rimca 0.2.0
 
 USAGE:
     rimca <SUBCOMMAND>
