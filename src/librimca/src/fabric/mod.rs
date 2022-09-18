@@ -59,6 +59,7 @@ impl DownloadSequence for Instance<Fabric> {
             }
         }
 
+        self.inner.version = Some(loader_version);
         self.create_state(String::new())?;
 
         return Ok(dls)
@@ -69,7 +70,7 @@ impl DownloadSequence for Instance<Fabric> {
 
         let game = Component::GameComponent { 
             asset_index: None, 
-            version: self.inner.vanilla.inner.version.as_ref().ok_or(DownloadError::VersionNotSpecified)?.to_string()
+            version: self.inner.version.as_ref().ok_or(DownloadError::VersionNotSpecified)?.to_string()
         };
 
         self.state.components.insert("net.fabricmc".to_string(), game);
@@ -79,6 +80,22 @@ impl DownloadSequence for Instance<Fabric> {
 }
 
 impl LaunchSequence for Instance<Fabric> {
+    fn get_main_class(&self, meta: &vanilla::Meta) -> Result<String, LaunchError> {
+        let version = {
+            match self.state.get_component("net.fabricmc")? {
+                Component::GameComponent { version, .. } => version,
+                _ => return Err(LaunchError::StateError(StateError::FieldNotFound("version".to_string(), "net.minecraft".to_string())))
+            }
+        };
+
+        let path = self.paths.get("meta")?.join("net.fabricmc").join(format!("{}.json", version));
+        let file = std::fs::File::open(&path)?;
+        let reader = BufReader::new(file);
+        let fabric_meta: Meta = serde_json::from_reader(reader)?; 
+
+        Ok(fabric_meta.main_class)
+    }
+
     fn get_meta(&self) -> Result<vanilla::Meta, LaunchError> {
         Ok(self.inner.vanilla.get_meta()?)
     }
@@ -90,18 +107,33 @@ impl LaunchSequence for Instance<Fabric> {
     fn get_classpath(&self, meta: &vanilla::Meta) -> Result<String, LaunchError> { 
         let mut classpath = self.inner.vanilla.get_classpath(meta)?;
 
+        let version = {
+            match self.state.get_component("net.fabricmc")? {
+                Component::GameComponent { version, .. } => version,
+                _ => return Err(LaunchError::StateError(StateError::FieldNotFound("version".to_string(), "net.minecraft".to_string())))
+            }
+        };
+
+        let path = self.paths.get("meta")?.join("net.fabricmc").join(format!("{}.json", version));
+        let file = std::fs::File::open(&path)?;
+        let reader = BufReader::new(file);
+        let fabric_meta: Meta = serde_json::from_reader(reader)?; 
+
         let dir_name = self.paths.get("libraries")?;
         classpath.push(':');
-        for lib in &meta.libraries {
+        for lib in &fabric_meta.libraries {
             let split = lib.name.split(":").collect::<Vec<&str>>();
             let path = format!("/{}/{}/{}/{}-{}.jar", 
                 split[0].to_string().replace(".", "/"), split[1], split[2], split[1], split[2]
             );
 
+            println!("dir name: {}", &path);
             classpath.push_str(dir_name.to_str().unwrap());
             classpath.push_str(&path);
             classpath.push(':');
         }
+
+        println!("REAL CLASSPATH!!!: {}", classpath);
 
         classpath.pop();
 

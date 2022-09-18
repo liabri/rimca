@@ -7,12 +7,13 @@ pub trait LaunchSequence {
         let game_opts = self.get_game_options(username, &meta)?;
         let classpath = self.get_classpath(&meta)?;
         let jvm_args = self.get_jvm_arguments(&classpath, &meta)?;
-        let main_class = meta.main_class;
+        let main_class = self.get_main_class(&meta)?;
 
         self.execute(jvm_args, &main_class, game_opts)?;
         Ok(())
     }
 
+    fn get_main_class(&self, meta: &Meta) -> Result<String, LaunchError>;
     fn get_meta(&self) -> Result<Meta, LaunchError>;
     fn get_game_options(&self, username: &str, meta: &Meta) -> Result<Vec<String>, LaunchError>;
     fn get_classpath(&self, meta: &Meta) -> Result<String, LaunchError>;

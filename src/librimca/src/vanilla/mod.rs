@@ -145,6 +145,10 @@ impl DownloadSequence for Instance<Vanilla> {
 }
 
 impl LaunchSequence for Instance<Vanilla> {
+    fn get_main_class(&self, meta: &Meta) -> Result<String, LaunchError> {
+        Ok(meta.main_class.clone())
+    }
+
     fn get_meta(&self) -> Result<Meta, LaunchError> {
         let version = {
             match self.state.get_component("net.minecraft")? {
