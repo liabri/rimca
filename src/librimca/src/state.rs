@@ -7,23 +7,23 @@ use crate::error::StateError;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct State {
-	pub scenario: String,
-	pub components: HashMap<String, Component>,
-	pub wrapper: Option<String>,
-	pub prelaunch_cmds: Option<Vec<String>>
+    pub scenario: String,
+    pub components: HashMap<String, Component>,
+    pub wrapper: Option<String>,
+    pub prelaunch_cmds: Option<Vec<String>>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum Component {
     GameComponent { 
-    	asset_index: Option<String>, 
-    	version: String 
+        asset_index: Option<String>, 
+        version: String 
     },
 
     JavaComponent { 
-    	path: String, 
-    	arguments: Option<String> 
+        path: String, 
+        arguments: Option<String> 
     }
 }
 
