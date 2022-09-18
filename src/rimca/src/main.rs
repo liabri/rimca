@@ -1,15 +1,22 @@
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
+use std::path::PathBuf;
+use std::str::FromStr;
+use structopt::clap::Error;
 
 pub fn main() {
 	match Arguments::from_args().command {
 		// Command::Login => rimca::auth::Accounts::get().unwrap().new_account().unwrap(),
 		// Command::Delete{ instance } => Instance::get(&instance).delete().unwrap(),
+        
         Command::Download(dl) => {
+            let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
+
+
 			// if let Some(fabric) = dl.fabric {
 			// 	// rimca::Instance::<Fabric>::new(dl.version, fabric).download().unwrap();
 			// } else {
-                rimca::download(dl.instance, dl.version, Some(String::from("vanilla"))).unwrap()
+                rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &base_dir).unwrap()
 			// 	rimca::Instance::<Vanilla>::download(dl.instance/*, dl.version.as_ref().map(|x| &**x)*/).unwrap().download().unwrap();
 			// }
         },
@@ -20,27 +27,34 @@ pub fn main() {
         // SOSH
 
         Command::Launch(l) => {
-        	rimca::launch(&l.instance, &l.username).unwrap()
+            let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
+        	rimca::launch(&l.instance, &l.username, &base_dir).unwrap()
         },
 
-        Command::List(List::Remote(Remote::Vanilla(v))) => {
-        	for mut version in rimca::vanilla::api::versions(v.snapshot).unwrap().into_iter().rev() {
-				version.release_time.truncate(version.release_time.find("T").unwrap());
-				println!("{0: <20} {1: <15} {2: <25}", version.id, version.r#type, version.release_time);
-			}
-		},
+        Command::List(list) => {
+            if let Some(remote) = list.loader {
+                match remote {
+                    Remote::Vanilla => {
+   //       for mut version in rimca::vanilla::api::versions(v.snapshot).unwrap().into_iter().rev() {
+            //  version.release_time.truncate(version.release_time.find("T").unwrap());
+            //  println!("{0: <20} {1: <15} {2: <25}", version.id, version.r#type, version.release_time);
+            // }  
+                    },
 
-  //       Command::List(List::Remote(Remote::Fabric(_))) => {
-		// 	for version in rimca::fabric::api::loaders().unwrap().into_iter().rev() {
-		// 		println!("{0: <20} {1: <15}", version.version, version.stable)
-		// 	}
-		// },
-
-        Command::List(List::Local) => {
-		 //    for instance in rimca::list_instances().unwrap() {
-			// 	println!("{}", instance.as_str());
-			// }	
-		},
+                    Remote::Fabric => {
+        //  for version in rimca::fabric::api::loaders().unwrap().into_iter().rev() {
+        //      println!("{0: <20} {1: <15}", version.version, version.stable)
+        //  }      
+                    }
+                }
+                //list remote stuff...
+            } else {
+                let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
+                for instance in rimca::list_instances(&base_dir).unwrap() {
+                    println!("{}", instance.as_str());
+                }    
+            }
+        }
 
         _ => {}
     }
@@ -103,45 +117,37 @@ pub struct Download {
 pub struct Launch {
     pub instance: String,
     pub username: String,
-    #[structopt(short = "q" , long)]
+    #[structopt(short = "q", long)]
     ///Print output of game to terminal
     pub game_output: bool,
 }
 
 #[derive(StructOpt)]
-pub enum List {
-    ///Remote objects
-    Remote(Remote),
-    ///Local objects
-    Local,
+pub struct List {
+    #[structopt(short = "r", long= "--remote")]
+    ///Print output of game to terminal
+    pub loader: Option<Remote>,
+    #[structopt(short = "s", long)]
+    ///List snapshot/unstable versions
+    pub snapshot: bool,
+}
+
+impl FromStr for Remote {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "vanilla" => Ok(Remote::Vanilla),
+            "fabric" => Ok(Remote::Fabric),
+            _ => todo!()
+        }
+    }
 }
 
 #[derive(StructOpt)]
 pub enum Remote {
     ///List vanilla versions
-    Vanilla(VanillaList),
+    Vanilla,
     ///List fabric versions
-    Fabric(FabricList),
-}
-
-#[derive(StructOpt)]
-pub struct VanillaList {
-    #[structopt(short = "s", long)]
-    ///List snapshot versions
-    pub snapshot: bool
-}
-
-#[derive(StructOpt)]
-pub struct FabricList {
-    #[structopt(short = "u", long)]
-    ///List unstable versions
-    pub unstable: bool,
-
-    #[structopt(value_name="fabric-version", long)]
-    ///List vanilla versions comptable with the fabric version specified
-    pub version: Option<String>,
-
-    #[structopt(value_name="vanilla-version", long)]
-    ///List fabric versions comptable with the vanilla version specified
-    pub game_version: Option<String>
+    Fabric,
 }

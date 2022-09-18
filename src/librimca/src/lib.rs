@@ -18,16 +18,13 @@ mod verify;
 mod paths;
 use paths::Paths;
 
-use std::path::PathBuf;
+use std::path::Path;
 
 pub struct Instance<T> {
     paths: Paths,
     state: State,
     inner: T,
 }
-
-pub trait InstanceTrait: LaunchSequence + DownloadSequence {}
-impl<T> InstanceTrait for T where T: LaunchSequence + DownloadSequence {}
 
 impl<T> Instance<T> {
     fn get(state: State, paths: Paths, version: Option<String>) -> Result<Box<dyn InstanceTrait>, Error> {
@@ -38,10 +35,12 @@ impl<T> Instance<T> {
     }   
 }
 
-pub fn download(instance: String, version: Option<String>, scenario: Option<String>) -> Result<(), Error> {
+pub trait InstanceTrait: LaunchSequence + DownloadSequence {}
+impl<T> InstanceTrait for T where T: LaunchSequence + DownloadSequence {}
+
+pub fn download(instance: &str, version: Option<String>, scenario: Option<String>, base_dir: &Path) -> Result<(), Error> {
     let mut paths = Paths::new();
-    let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
-    let instance_path = base_dir.join("instances").join(&instance);
+    let instance_path = base_dir.join("instances").join(instance);
     std::fs::create_dir_all(&instance_path)?;
 
     paths.0.insert("natives".to_string(), instance_path.join("natives")); 
@@ -53,17 +52,15 @@ pub fn download(instance: String, version: Option<String>, scenario: Option<Stri
     let scenario = scenario.unwrap_or("vanilla".to_string());
     let state = State::from_scenario(scenario);
 
-    Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.download();
+    Instance::<Box<dyn InstanceTrait>>::get(state, paths, version)?.download()?;
 
     Ok(())
 }
 
-pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
+pub fn launch(instance: &str, username: &str, base_dir: &Path) -> Result<(), Error> {
     let mut paths = Paths::new();
-    let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
     let instance_path = base_dir.join("instances").join(instance);
 
-    let state = State::read(&instance_path)?;
     paths.0.insert("resources".to_string(), instance_path.join("resources")); 
     paths.0.insert("natives".to_string(), instance_path.join("natives"));
     paths.0.insert("instance".to_string(), instance_path);
@@ -73,7 +70,15 @@ pub fn launch(instance: &str, username: &str) -> Result<(), Error> {
 
     let state = State::read(&paths.get("instance")?)?;  
 
-    Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.launch(username);
+    Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.launch(username)?;
 
     Ok(())
+}
+
+pub fn list_instances(base_dir: &Path) -> std::io::Result<Vec<String>> {
+    let instance_path = base_dir.join("instances");
+    Ok(std::fs::read_dir(instance_path)?
+        .map(|x| x.unwrap().file_name().into_string().unwrap())
+        .collect::<Vec<String>>()
+    )
 }
