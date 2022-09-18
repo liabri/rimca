@@ -36,8 +36,12 @@ impl DownloadSequence for Instance<Fabric> {
 
         let loader_version = api::best_version(self.inner.vanilla.inner.version.as_ref().unwrap())?;
 
-        let meta_str = nizziel::blocking::download(api::META, &self.paths.get("meta")?.join("net.fabricmc").join(&format!("{}.json", &loader_version)), false)?;
-        let meta: Meta = serde_json::from_slice(&meta_str)?;
+        let meta_str = nizziel::blocking::download(
+            &api::META
+                .replace("{game_version}", self.inner.vanilla.inner.version.as_ref().unwrap())
+                .replace("{loader_version}", &loader_version), 
+            &self.paths.get("meta")?.join("net.fabricmc").join(&format!("{}.json", &loader_version)), false)?;
+        let meta: Meta = serde_json::from_slice(&meta_str).unwrap();
 
         for lib in meta.libraries {
             let split = lib.name.split(":").collect::<Vec<&str>>();
@@ -61,6 +65,8 @@ impl DownloadSequence for Instance<Fabric> {
     }
 
     fn create_state(&mut self, _: String) -> Result<(), DownloadError> {
+        self.state = self.inner.vanilla.state.clone();
+
         let game = Component::GameComponent { 
             asset_index: None, 
             version: self.inner.vanilla.inner.version.as_ref().ok_or(DownloadError::VersionNotSpecified)?.to_string()

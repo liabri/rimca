@@ -31,9 +31,16 @@ pub struct Instance<T> {
 
 impl<T> Instance<T> {
     fn get(state: State, paths: Paths, version: Option<String>) -> Result<Box<dyn InstanceTrait>, Error> {
+        let vanilla = Instance::<Vanilla> { 
+            paths: paths.clone(), 
+            state: state.clone(), 
+            inner: Vanilla::from(version) 
+        };
+
         match state.scenario.as_ref() { 
-            "vanilla" => Ok(Box::new(Instance::<Vanilla> { paths, state, inner: Vanilla::from(version) })),
-            "fabric" => Ok(Box::new(Instance::<Fabric> { paths, state, inner: Fabric::from(Vanilla::from(version)) })),
+            "vanilla" => Ok(Box::new(vanilla)),
+            "fabric" => Ok(Box::new(Instance::<Fabric> { paths, state, inner: Fabric::from(vanilla) 
+            })),
             _ => Err(Error::StateError(StateError::ScenarioDoesNotExist(String::from(state.scenario))))
         }
     }   

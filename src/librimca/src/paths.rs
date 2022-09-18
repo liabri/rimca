@@ -2,6 +2,7 @@ use crate::error::PathError;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+#[derive(Clone)]
 pub struct Paths(pub HashMap<String, PathBuf>);
 
 impl Paths {

@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use crate::error::StateError;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct State {
     pub scenario: String,
     pub components: HashMap<String, Component>,
@@ -13,7 +13,7 @@ pub struct State {
     pub prelaunch_cmds: Option<Vec<String>>
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum Component {
     GameComponent { 
