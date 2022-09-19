@@ -30,18 +30,14 @@ impl DownloadSequence for Instance<Vanilla> {
     fn collect_urls(&mut self) -> Result<Downloads, DownloadError> {
         let version = match &self.inner.version {
             Some(ver) => {
-                api::versions(true)?
-                    .into_iter()
-                    .filter(|v| v.id.eq(ver))
-                    .next()
-                    .ok_or(DownloadError::GameVersionNotFound(ver.to_string()))?
+                api::versions(true)?.into_iter().find(|v| v.id.eq(ver))
+                    .ok_or_else(|| DownloadError::GameVersionNotFound(ver.to_string()))?
             },
 
             None => api::latest(false)?
         };
 
-        let mut dls = Downloads::default();
-        dls.retries = 5;
+        let mut dls = Downloads { retries: 5, ..Default::default() };
 
         // get meta file, used to get libraries, natives & assets -- in that order
         let meta_str = nizziel::blocking::download(&version.url, &self.paths.get("meta")?.join("net.minecraft").join(format!("{}.json", &version.id)), false)?;
@@ -52,7 +48,7 @@ impl DownloadSequence for Instance<Vanilla> {
         if !path.exists() || !is_file_valid(&path, &meta.downloads.client.sha1)? {
             dls.downloads.push(Download {
                 url: meta.downloads.client.url,
-                path: path,
+                path,
                 unzip: false
             });
         }
@@ -65,7 +61,7 @@ impl DownloadSequence for Instance<Vanilla> {
                 if !path.exists() || !is_file_valid(&path, &artifact.sha1)? {
                     dls.downloads.push(Download{
                         url: artifact.url,
-                        path: path,
+                        path,
                         unzip: false
                     });
                 }
@@ -99,7 +95,7 @@ impl DownloadSequence for Instance<Vanilla> {
                 if !path.exists() && is_file_valid(&path, &hash.hash)? {
                     dls.downloads.push(Download {
                         url: format!("https://resources.download.minecraft.net/{}/{}", hash_head, hash.hash),
-                        path: path,
+                        path,
                         unzip: false
                     });
                 }
@@ -108,12 +104,12 @@ impl DownloadSequence for Instance<Vanilla> {
             let objects_dir = self.paths.get("assets")?.join("objects");
             for hash in assets.objects.values() {
                 let hash_head = &hash.hash[0..2];
-                let path = objects_dir.join(&hash_head).join(&hash.hash);
+                let path = objects_dir.join(hash_head).join(&hash.hash);
 
                 if !path.exists() {
                     dls.downloads.push(Download{
                         url: format!("https://resources.download.minecraft.net/{}/{}", hash_head, hash.hash),
-                        path: path,
+                        path,
                         unzip: false
                     });
                 }
@@ -123,7 +119,7 @@ impl DownloadSequence for Instance<Vanilla> {
         self.inner.version = Some(version.id);
         self.create_state(asset_id)?;
 
-        return Ok(dls)
+        Ok(dls)
     }
 
     fn create_state(&mut self, asset_id: String) -> Result<(), DownloadError> {
@@ -139,7 +135,7 @@ impl DownloadSequence for Instance<Vanilla> {
 
         self.state.components.insert("java".to_string(), java);
         self.state.components.insert("net.minecraft".to_string(), game);
-        self.state.write(&self.paths.get("instance")?)?;
+        self.state.write(self.paths.get("instance")?)?;
         Ok(())
     }
 }
@@ -166,7 +162,7 @@ impl LaunchSequence for Instance<Vanilla> {
     
     fn get_game_options(&self, username: &str, meta: &Meta) -> Result<Vec<String>, LaunchError> { 
         if let Component::GameComponent { asset_index, version } = self.state.get_component("net.minecraft")? {
-            let asset_index = asset_index.as_ref().ok_or(StateError::FieldNotFound("asset_index".to_string(), "net.minecraft".to_string()))?;   
+            let asset_index = asset_index.as_ref().ok_or_else(|| StateError::FieldNotFound("asset_index".to_string(), "net.minecraft".to_string()))?;   
             let game_assets = self.paths.get("resources")?;
 
             let arguments = meta.arguments.get("game").ok_or(LaunchError::ArgumentsNotFound(LaunchArguments::Game))?;
@@ -235,7 +231,7 @@ impl LaunchSequence for Instance<Vanilla> {
         let mut jvm_arguments = {
             if let Some(arguments) = meta.arguments.get("jvm") {
                 arguments.iter().map(|x| x
-                        .replace("${natives_directory}", &natives_directory.to_str().unwrap())
+                        .replace("${natives_directory}", natives_directory.to_str().unwrap())
                         .replace("${launcher_name}", "rimca")
                         .replace("${launcher_version}", "3.0")
                         .replace("${classpath}", classpath)
@@ -249,45 +245,41 @@ impl LaunchSequence for Instance<Vanilla> {
             } 
         };
 
-        if let Ok(component) = &self.state.get_component("java") {
-            if let Component::JavaComponent { arguments, .. } = component {
-                if let Some(args) = arguments {
-                    jvm_arguments.extend(args.split_whitespace().map(|s| s.to_string()));
-                } 
+        if let Ok(Component::JavaComponent { arguments, .. }) = &self.state.get_component("java") {
+            if let Some(args) = arguments {
+                jvm_arguments.extend(args.split_whitespace().map(|s| s.to_string()));
+            } 
 
-                return Ok(jvm_arguments);
-            }
+            return Ok(jvm_arguments);
         }
 
         Err(LaunchError::StateError(StateError::ComponentNotFound(String::from("java"))))
     }
 
     fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> { 
-        if let Ok(component) = self.state.get_component("java") {
-            if let Component::JavaComponent { path, .. } = component {
-                let (exe, args) = match &self.state.wrapper {
-                    Some(wrapper) => (wrapper.as_str(), &["java"][..]),
-                    None => (path.as_str(), &[][..]),
-                };
+        if let Ok(Component::JavaComponent { path, .. }) = self.state.get_component("java") {
+            let (exe, args) = match &self.state.wrapper {
+                Some(wrapper) => (wrapper.as_str(), &["java"][..]),
+                None => (path.as_str(), &[][..]),
+            };
 
-                let mut command = Command::new(exe);
-                command.args(args);
-                command.current_dir(self.paths.get("instance")?)
-                    .args(jvm_args)
-                    .arg(main_class)
-                    .args(game_opts);
+            let mut command = Command::new(exe);
+            command.args(args);
+            command.current_dir(self.paths.get("instance")?)
+                .args(jvm_args)
+                .arg(main_class)
+                .args(game_opts);
 
-                // if *self.no_output() {
-                //  log::debug!("No jvm output enabled");
-                //  command.stdout(Stdio::null())
-                //  .stderr(Stdio::null());
-                // }
+            // if *self.no_output() {
+            //  log::debug!("No jvm output enabled");
+            //  command.stdout(Stdio::null())
+            //  .stderr(Stdio::null());
+            // }
 
-                println!("Spawning command: {:?}", command);
-                command.spawn()?;
+            println!("Spawning command: {:?}", command);
+            command.spawn()?;
 
-                return Ok(())
-            }
+            return Ok(())
         }
 
         Err(LaunchError::StateError(StateError::ComponentNotFound(String::from("java"))))

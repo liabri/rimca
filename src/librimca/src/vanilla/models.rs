@@ -110,7 +110,7 @@ pub fn arguments_deserialiser<'de, D: Deserializer<'de>>(d: D) -> Result<HashMap
                 vec
                     .as_array()
                     .unwrap()
-                    .into_iter()
+                    .iter()
                     .filter_map(|value| {
                         value.as_str().map(|x| x.to_string())
                     }).collect()

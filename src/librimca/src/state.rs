@@ -38,7 +38,7 @@ impl State {
     }
 
     pub fn get_component(&self, key: &str) -> Result<&Component, StateError> {
-        self.components.get(key).ok_or(StateError::ComponentNotFound(String::from(key)))
+        self.components.get(key).ok_or_else(|| StateError::ComponentNotFound(String::from(key)))
     }
 
     pub fn write(&self, instance_path: &Path) -> Result<(), StateError> {

@@ -41,7 +41,7 @@ impl<T> Instance<T> {
             "vanilla" => Ok(Box::new(vanilla)),
             "fabric" => Ok(Box::new(Instance::<Fabric> { paths, state, inner: Fabric::from(vanilla) 
             })),
-            _ => Err(Error::StateError(StateError::ScenarioDoesNotExist(String::from(state.scenario))))
+            _ => Err(Error::StateError(StateError::ScenarioDoesNotExist(state.scenario)))
         }
     }   
 }
@@ -60,7 +60,7 @@ pub fn download(instance: &str, version: Option<String>, scenario: Option<String
     paths.0.insert("assets".to_string(), base_dir.join("assets")); 
     paths.0.insert("libraries".to_string(), base_dir.join("libraries")); 
 
-    let scenario = scenario.unwrap_or("vanilla".to_string());
+    let scenario = scenario.unwrap_or_else(|| "vanilla".to_string());
     let state = State::from_scenario(scenario);
 
     Instance::<Box<dyn InstanceTrait>>::get(state, paths, version)?.download()?;
@@ -79,7 +79,7 @@ pub fn launch(instance: &str, username: &str, base_dir: &Path) -> Result<(), Err
     paths.0.insert("assets".to_string(), base_dir.join("assets"));
     paths.0.insert("libraries".to_string(), base_dir.join("libraries")); 
 
-    let state = State::read(&paths.get("instance")?)?;  
+    let state = State::read(paths.get("instance")?)?;  
 
     Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.launch(username)?;
 

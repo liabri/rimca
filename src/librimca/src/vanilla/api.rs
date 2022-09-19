@@ -45,9 +45,8 @@ pub fn latest(snapshot: bool) -> Result<Version, ApiError> {
     let van = reqwest::blocking::get(VERSION_MANIFEST_URL)?
         .json::<VanillaLatest>()?;
 
-    Ok(versions(snapshot)?
+    versions(snapshot)?
         .into_iter()
-        .filter(|v| v.id.eq(&van.latest.release) || v.id.eq(&van.latest.snapshot))
-        .next()
-        .ok_or(ApiError::CannotFindLatestVersion)?)
+        .find(|v| v.id.eq(&van.latest.release) || v.id.eq(&van.latest.snapshot))
+        .ok_or(ApiError::CannotFindLatestVersion)
 }

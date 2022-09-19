@@ -2,8 +2,8 @@ use sha1::{ Sha1, Digest };
 use std::path::Path;
 
 pub fn is_file_valid(path: &Path, sha1: &str) -> std::io::Result<bool> {
-    let mut bytes = std::fs::read(&path)?;
-    let hash = Sha1::digest(&mut bytes);
+    let bytes = std::fs::read(path)?;
+    let hash = Sha1::digest(&bytes);
 
     if parse_hex_pairs(sha1).eq(hash.into_iter()) {     
         return Ok(true)
