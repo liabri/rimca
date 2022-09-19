@@ -80,7 +80,7 @@ impl DownloadSequence for Instance<Fabric> {
 }
 
 impl LaunchSequence for Instance<Fabric> {
-    fn get_main_class(&self, meta: &vanilla::Meta) -> Result<String, LaunchError> {
+    fn get_main_class(&self) -> Result<String, LaunchError> {
         let version = {
             match self.state.get_component("net.fabricmc")? {
                 Component::GameComponent { version, .. } => version,
@@ -95,17 +95,13 @@ impl LaunchSequence for Instance<Fabric> {
 
         Ok(fabric_meta.main_class)
     }
-
-    fn get_meta(&self) -> Result<vanilla::Meta, LaunchError> {
-        self.inner.vanilla.get_meta()
-    }
     
-    fn get_game_options(&self, username: &str, meta: &vanilla::Meta) -> Result<Vec<String>, LaunchError> { 
-        self.inner.vanilla.get_game_options(username, meta)
+    fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError> { 
+        self.inner.vanilla.get_game_options(username)
     }
 
-    fn get_classpath(&self, meta: &vanilla::Meta) -> Result<String, LaunchError> { 
-        let mut classpath = self.inner.vanilla.get_classpath(meta)?;
+    fn get_classpath(&self) -> Result<String, LaunchError> { 
+        let mut classpath = self.inner.vanilla.get_classpath()?;
 
         let version = {
             match self.state.get_component("net.fabricmc")? {
@@ -140,8 +136,8 @@ impl LaunchSequence for Instance<Fabric> {
         Ok(classpath)
     }
     
-    fn get_jvm_arguments(&self, classpath: &str, meta: &vanilla::Meta) -> Result<Vec<String>, LaunchError> { 
-        self.inner.vanilla.get_jvm_arguments(classpath, meta)
+    fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError> { 
+        self.inner.vanilla.get_jvm_arguments(classpath)
     }
 
     fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> { 

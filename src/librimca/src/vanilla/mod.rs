@@ -16,12 +16,37 @@ use nizziel::{ Download, Downloads };
 
 pub struct Vanilla {
     pub version: Option<String>,
+    pub meta: Meta
 }
 
 impl From<Option<String>> for Vanilla {
     fn from(version: Option<String>) -> Self {
+
+        let meta = {
+            println!("VERSION: {:?}", version);
+            let path = std::path::PathBuf::from("/home/liabri/loghob/minecraft/rimca/meta/net.minecraft").join(format!("{}.json", version.as_ref().unwrap()));
+            let file = std::fs::File::open(&path).unwrap();
+            let reader = BufReader::new(file);
+            if let Ok(meta) = serde_json::from_reader(reader) {
+                meta 
+            } else {
+                let version = match version {
+                    Some(ref ver) => {
+                        api::versions(true).unwrap().into_iter().find(|v| v.id.eq(ver))
+                            .ok_or_else(|| DownloadError::GameVersionNotFound(ver.to_string())).unwrap()
+                    },
+
+                    None => api::latest(false).unwrap()
+                };
+
+                let meta_str = nizziel::blocking::download(&version.url, &path, false).unwrap();
+                serde_json::from_slice::<Meta>(&meta_str).unwrap()
+            }
+        };
+
         Self {
-            version
+            version,
+            meta
         }
     }
 }
@@ -39,28 +64,24 @@ impl DownloadSequence for Instance<Vanilla> {
 
         let mut dls = Downloads { retries: 5, ..Default::default() };
 
-        // get meta file, used to get libraries, natives & assets -- in that order
-        let meta_str = nizziel::blocking::download(&version.url, &self.paths.get("meta")?.join("net.minecraft").join(format!("{}.json", &version.id)), false)?;
-        let meta: Meta = serde_json::from_slice(&meta_str)?;
-
         // version.jar
         let path = self.paths.get("libraries")?.join("com").join("mojang").join("minecraft").join(&version.id).join(format!("minecraft-{}-client.jar", &version.id));
-        if !path.exists() || !is_file_valid(&path, &meta.downloads.client.sha1)? {
+        if !path.exists() || !is_file_valid(&path, &self.inner.meta.downloads.client.sha1)? {
             dls.downloads.push(Download {
-                url: meta.downloads.client.url,
+                url: self.inner.meta.downloads.client.url.clone(),
                 path,
                 unzip: false
             });
         }
 
         let natives_dir = self.paths.get("natives")?;
-        for lib in meta.libraries {
+        for lib in &self.inner.meta.libraries {
             // libraries
-            if let Some(artifact) = lib.downloads.artifact {
-                let path = self.paths.get("libraries")?.join(artifact.path);
+            if let Some(artifact) = &lib.downloads.artifact {
+                let path = self.paths.get("libraries")?.join(&artifact.path);
                 if !path.exists() || !is_file_valid(&path, &artifact.sha1)? {
                     dls.downloads.push(Download{
-                        url: artifact.url,
+                        url: artifact.url.clone(),
                         path,
                         unzip: false
                     });
@@ -68,8 +89,8 @@ impl DownloadSequence for Instance<Vanilla> {
             }
 
             // natives (pre 1.19)
-            if let Some(key) = lib.natives.and_then(|n| n.linux) {
-                if let Some(url) = &lib.downloads.classifiers.ok_or(DownloadError::LibraryNoClassifiers(lib.name))?.get(&key) {
+            if let Some(key) = lib.natives.as_ref().and_then(|n| n.linux.as_ref()) {
+                if let Some(url) = lib.downloads.classifiers.as_ref().ok_or_else(|| DownloadError::LibraryNoClassifiers(lib.name.clone()))?.get(key) {
                     dls.downloads.push(Download {
                         url: url.url.to_string(),
                         path: natives_dir.clone(),
@@ -80,8 +101,8 @@ impl DownloadSequence for Instance<Vanilla> {
         }
 
         // assets
-        let asset_id = meta.asset_index.id;
-        let url = meta.asset_index.url;
+        let asset_id = &self.inner.meta.asset_index.id;
+        let url = &self.inner.meta.asset_index.url;
         let path = self.paths.get("assets")?.join("indexes").join(format!("{}.json", asset_id));
 
         let assets_str = nizziel::blocking::download(&url, &path, false)?;
@@ -117,7 +138,7 @@ impl DownloadSequence for Instance<Vanilla> {
         }
 
         self.inner.version = Some(version.id);
-        self.create_state(asset_id)?;
+        self.create_state(asset_id.clone())?;
 
         Ok(dls)
     }
@@ -141,31 +162,16 @@ impl DownloadSequence for Instance<Vanilla> {
 }
 
 impl LaunchSequence for Instance<Vanilla> {
-    fn get_main_class(&self, meta: &Meta) -> Result<String, LaunchError> {
-        Ok(meta.main_class.clone())
-    }
-
-    fn get_meta(&self) -> Result<Meta, LaunchError> {
-        let version = {
-            match self.state.get_component("net.minecraft")? {
-                Component::GameComponent { version, .. } => version,
-                _ => return Err(LaunchError::StateError(StateError::FieldNotFound("version".to_string(), "net.minecraft".to_string())))
-            }
-        };
-
-        let meta_path = self.paths.get("meta")?
-            .join("net.minecraft").join(format!("{}.json", &version));
-        let meta_file = std::fs::File::open(&meta_path)?;
-        let reader = BufReader::new(meta_file);
-        Ok(serde_json::from_reader(reader)?)
+    fn get_main_class(&self) -> Result<String, LaunchError> {
+        Ok(self.inner.meta.main_class.clone())
     }
     
-    fn get_game_options(&self, username: &str, meta: &Meta) -> Result<Vec<String>, LaunchError> { 
+    fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError> { 
         if let Component::GameComponent { asset_index, version } = self.state.get_component("net.minecraft")? {
             let asset_index = asset_index.as_ref().ok_or_else(|| StateError::FieldNotFound("asset_index".to_string(), "net.minecraft".to_string()))?;   
             let game_assets = self.paths.get("resources")?;
 
-            let arguments = meta.arguments.get("game").ok_or(LaunchError::ArgumentsNotFound(LaunchArguments::Game))?;
+            let arguments = self.inner.meta.arguments.get("game").ok_or(LaunchError::ArgumentsNotFound(LaunchArguments::Game))?;
             // let account = crate::auth::Accounts::get()?.get_account(self.username()).unwrap_or(auth::Account::default());
 
             return Ok(arguments.iter().map(|x| x
@@ -177,7 +183,7 @@ impl LaunchSequence for Instance<Vanilla> {
                     .replace("${auth_uuid}", "null")//&account.uuid)
                     .replace("${auth_access_token}", "null")//&account.access_token)
                     .replace("${user_type}", "mojang")
-                    .replace("${version_type}", &meta.r#type)
+                    .replace("${version_type}", &self.inner.meta.r#type)
                     .replace("${user_properties}", "{}")
                     // .replace("${resolution_width}", "1920")
                     // .replace("${resolution_height}", "1080")
@@ -189,15 +195,15 @@ impl LaunchSequence for Instance<Vanilla> {
         Err(LaunchError::StateError(StateError::ComponentNotFound(String::from("net.minecraft"))))
     }
 
-    fn get_classpath(&self, meta: &Meta) -> Result<String, LaunchError> { 
+    fn get_classpath(&self) -> Result<String, LaunchError> { 
         let libraries = self.paths.get("libraries")?;
 
-        let mut classpath = String::with_capacity((libraries.to_str().unwrap().len() * meta.libraries.len())
-            + (meta.libraries.len() * 2)
-            + meta.libraries.iter().map(|lib| lib.downloads.artifact.as_ref().map_or(0, |a| a.path.len())).sum::<usize>()
+        let mut classpath = String::with_capacity((libraries.to_str().unwrap().len() * self.inner.meta.libraries.len())
+            + (self.inner.meta.libraries.len() * 2)
+            + self.inner.meta.libraries.iter().map(|lib| lib.downloads.artifact.as_ref().map_or(0, |a| a.path.len())).sum::<usize>()
         );
 
-        'outer: for lib in &meta.libraries {
+        'outer: for lib in &self.inner.meta.libraries {
             if let Some(rules) = &lib.rules {
                 for rule in rules {
                     if let Some(os) = &rule.os {
@@ -219,17 +225,17 @@ impl LaunchSequence for Instance<Vanilla> {
             }
         }
 
-        let jar_name = format!("minecraft-{}-client.jar", meta.id);
-        let jar_path = libraries.join("com").join("mojang").join("minecraft").join(meta.id.clone()).join(jar_name);
+        let jar_name = format!("minecraft-{}-client.jar", self.inner.meta.id);
+        let jar_path = libraries.join("com").join("mojang").join("minecraft").join(self.inner.meta.id.clone()).join(jar_name);
         classpath.push_str(jar_path.to_str().unwrap());
         Ok(classpath)
     }
     
-    fn get_jvm_arguments(&self, classpath: &str, meta: &Meta) -> Result<Vec<String>, LaunchError> { 
+    fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError> { 
         let natives_directory = self.paths.get("natives")?;
 
         let mut jvm_arguments = {
-            if let Some(arguments) = meta.arguments.get("jvm") {
+            if let Some(arguments) = self.inner.meta.arguments.get("jvm") {
                 arguments.iter().map(|x| x
                         .replace("${natives_directory}", natives_directory.to_str().unwrap())
                         .replace("${launcher_name}", "rimca")
