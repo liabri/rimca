@@ -34,7 +34,7 @@ impl<T> Instance<T> {
         let vanilla = Instance::<Vanilla> { 
             paths: paths.clone(), 
             state: state.clone(), 
-            inner: Vanilla::from(version) 
+            inner: Vanilla::new(&paths, version)?
         };
 
         match state.scenario.as_ref() { 
@@ -81,7 +81,7 @@ pub fn launch(instance: &str, username: &str, base_dir: &Path) -> Result<(), Err
 
     let state = State::read(paths.get("instance")?)?;  
 
-    Instance::<Box<dyn InstanceTrait>>::get(state, paths, Some(String::from("1.19.2")))?.launch(username)?;
+    Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.launch(username)?;
 
     Ok(())
 }

@@ -34,11 +34,11 @@ impl DownloadSequence for Instance<Fabric> {
     fn collect_urls(&mut self) -> Result<Downloads, DownloadError> {
         let mut dls = self.inner.vanilla.collect_urls()?;
 
-        let loader_version = api::best_version(self.inner.vanilla.inner.version.as_ref().unwrap())?;
+        let loader_version = api::best_version(&self.inner.vanilla.inner.version.id)?;
 
         let meta_str = nizziel::blocking::download(
             &api::META
-                .replace("{game_version}", self.inner.vanilla.inner.version.as_ref().unwrap())
+                .replace("{game_version}", &self.inner.vanilla.inner.version.id)
                 .replace("{loader_version}", &loader_version), 
             &self.paths.get("meta")?.join("net.fabricmc").join(&format!("{}.json", &loader_version)), false)?;
         let meta: Meta = serde_json::from_slice(&meta_str).unwrap();

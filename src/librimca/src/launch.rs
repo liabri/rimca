@@ -13,7 +13,6 @@ pub trait LaunchSequence {
     }
 
     fn get_main_class(&self) -> Result<String, LaunchError>;
-    // fn get_meta(&self) -> Result<Meta, LaunchError>;
     fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError>;
     fn get_classpath(&self) -> Result<String, LaunchError>;
     fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError>;

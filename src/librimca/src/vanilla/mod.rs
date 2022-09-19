@@ -6,54 +6,25 @@ pub use models::{ Meta, Assets };
 use crate::Instance;
 use crate::download::DownloadSequence;
 use crate::launch::LaunchSequence;
-use crate::error::{ LaunchError, LaunchArguments, DownloadError, StateError };
+use crate::error::{ Error, LaunchError, LaunchArguments, DownloadError, StateError };
 use crate::state::Component;
 use crate::verify::is_file_valid;
+use crate::vanilla::api::Version;
 
+use crate::Paths;
 use std::process::Command;
 use std::io::BufReader;
 use nizziel::{ Download, Downloads };
 
 pub struct Vanilla {
-    pub version: Option<String>,
+    pub version: Version,
     pub meta: Meta
 }
 
-impl From<Option<String>> for Vanilla {
-    fn from(version: Option<String>) -> Self {
+impl Vanilla {
+    pub fn new(paths: &Paths, version: Option<String>) -> Result<Self, DownloadError> {
 
-        let meta = {
-            println!("VERSION: {:?}", version);
-            let path = std::path::PathBuf::from("/home/liabri/loghob/minecraft/rimca/meta/net.minecraft").join(format!("{}.json", version.as_ref().unwrap()));
-            let file = std::fs::File::open(&path).unwrap();
-            let reader = BufReader::new(file);
-            if let Ok(meta) = serde_json::from_reader(reader) {
-                meta 
-            } else {
-                let version = match version {
-                    Some(ref ver) => {
-                        api::versions(true).unwrap().into_iter().find(|v| v.id.eq(ver))
-                            .ok_or_else(|| DownloadError::GameVersionNotFound(ver.to_string())).unwrap()
-                    },
-
-                    None => api::latest(false).unwrap()
-                };
-
-                let meta_str = nizziel::blocking::download(&version.url, &path, false).unwrap();
-                serde_json::from_slice::<Meta>(&meta_str).unwrap()
-            }
-        };
-
-        Self {
-            version,
-            meta
-        }
-    }
-}
-
-impl DownloadSequence for Instance<Vanilla> {
-    fn collect_urls(&mut self) -> Result<Downloads, DownloadError> {
-        let version = match &self.inner.version {
+        let version = match &version {
             Some(ver) => {
                 api::versions(true)?.into_iter().find(|v| v.id.eq(ver))
                     .ok_or_else(|| DownloadError::GameVersionNotFound(ver.to_string()))?
@@ -62,10 +33,40 @@ impl DownloadSequence for Instance<Vanilla> {
             None => api::latest(false)?
         };
 
+        let meta = {
+            let path = std::path::PathBuf::from("/home/liabri/loghob/minecraft/rimca/meta/net.minecraft").join(format!("{}.json", version.id));
+            let file = std::fs::File::open(&path)?;
+            let reader = BufReader::new(file);
+            if let Ok(meta) = serde_json::from_reader(reader) {
+                meta 
+            } else {
+                let meta_str = nizziel::blocking::download(&version.url, &path, false)?;
+                serde_json::from_slice::<Meta>(&meta_str)?
+            }
+        };
+
+        Ok(Self {
+            version,
+            meta
+        })
+    }
+}
+
+impl DownloadSequence for Instance<Vanilla> {
+    fn collect_urls(&mut self) -> Result<Downloads, DownloadError> {
         let mut dls = Downloads { retries: 5, ..Default::default() };
 
+        let version = &self.inner.version;
+        let meta = &self.inner.meta;
+
         // version.jar
-        let path = self.paths.get("libraries")?.join("com").join("mojang").join("minecraft").join(&version.id).join(format!("minecraft-{}-client.jar", &version.id));
+        let path = self.paths.get("libraries")?
+            .join("com")
+            .join("mojang")
+            .join("minecraft")
+            .join(&version.id)
+            .join(format!("minecraft-{}-client.jar", version.id));
+
         if !path.exists() || !is_file_valid(&path, &self.inner.meta.downloads.client.sha1)? {
             dls.downloads.push(Download {
                 url: self.inner.meta.downloads.client.url.clone(),
@@ -137,7 +138,6 @@ impl DownloadSequence for Instance<Vanilla> {
             }
         }
 
-        self.inner.version = Some(version.id);
         self.create_state(asset_id.clone())?;
 
         Ok(dls)
@@ -151,7 +151,7 @@ impl DownloadSequence for Instance<Vanilla> {
 
         let game = Component::GameComponent { 
             asset_index: Some(asset_id), 
-            version: self.inner.version.as_ref().ok_or(DownloadError::VersionNotSpecified)?.to_string()
+            version: self.inner.version.id.to_string()
         };
 
         self.state.components.insert("java".to_string(), java);
