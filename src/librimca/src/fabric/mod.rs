@@ -140,7 +140,7 @@ impl LaunchSequence for Instance<Fabric> {
         self.inner.vanilla.get_jvm_arguments(classpath)
     }
 
-    fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> { 
-        self.inner.vanilla.execute(jvm_args, main_class, game_opts)
-    }
+    // fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> { 
+    //     self.inner.vanilla.execute(jvm_args, main_class, game_opts)
+    // }
 }

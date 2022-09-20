@@ -23,7 +23,6 @@ pub struct Vanilla {
 
 impl Vanilla {
     pub fn new(paths: &Paths, version: Option<String>) -> Result<Self, DownloadError> {
-
         let version = match &version {
             Some(ver) => {
                 api::versions(true)?.into_iter().find(|v| v.id.eq(ver))
@@ -57,7 +56,6 @@ impl DownloadSequence for Instance<Vanilla> {
         let mut dls = Downloads { retries: 5, ..Default::default() };
         let meta = &self.inner.meta;
 
-        // version.jar
         let path = self.paths.get("libraries")?
             .join("com")
             .join("mojang")
@@ -263,32 +261,7 @@ impl LaunchSequence for Instance<Vanilla> {
         Err(LaunchError::StateError(StateError::ComponentNotFound(String::from("java"))))
     }
 
-    fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> { 
-        if let Ok(Component::JavaComponent { path, .. }) = self.state.get_component("java") {
-            let (exe, args) = match &self.state.wrapper {
-                Some(wrapper) => (wrapper.as_str(), &["java"][..]),
-                None => (path.as_str(), &[][..]),
-            };
+    // fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> { 
 
-            let mut command = Command::new(exe);
-            command.args(args);
-            command.current_dir(self.paths.get("instance")?)
-                .args(jvm_args)
-                .arg(main_class)
-                .args(game_opts);
-
-            // if *self.no_output() {
-            //  log::debug!("No jvm output enabled");
-            //  command.stdout(Stdio::null())
-            //  .stderr(Stdio::null());
-            // }
-
-            println!("Spawning command: {:?}", command);
-            command.spawn()?;
-
-            return Ok(())
-        }
-
-        Err(LaunchError::StateError(StateError::ComponentNotFound(String::from("java"))))
-    }
+    // }
 }

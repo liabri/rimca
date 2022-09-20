@@ -12,7 +12,7 @@ pub trait DownloadSequence {
     }
 
     fn spawn_thread(&mut self, dls: Downloads) -> Result<(), DownloadError> {
-        println!("Downloading!");
+        log::info!("Downloading!");
 
         let before = std::time::Instant::now();
         let rt = tokio::runtime::Builder::new_multi_thread()
@@ -27,7 +27,7 @@ pub trait DownloadSequence {
             }
         );
 
-        println!("Time taken: {:.2?}", before.elapsed());
+        log::info!("Time taken: {:.2?}", before.elapsed());
         Ok(())      
     }
 }

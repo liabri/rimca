@@ -17,3 +17,4 @@ nizziel = { path = "../../../nizziel" }
 sha-1 = "0.9.4"
 thiserror = "1.0.30"
 tokio = "1.21.1"
+log = "0.4.17"
