@@ -14,6 +14,7 @@ pub fn main() {
 
 
 			if let Some(fabric) = dl.fabric {
+                let fabric_version = fabric.unwrap();
                 rimca::download(&dl.instance, dl.version, Some(String::from("fabric")), &base_dir).unwrap()
 			} else {
                 rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &base_dir).unwrap()
@@ -27,7 +28,7 @@ pub fn main() {
 
         Command::Launch(l) => {
             let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
-        	rimca::launch(&l.instance, &l.username, &base_dir).unwrap()
+        	rimca::launch(&l.instance, &l.username, l.game_output, &base_dir).unwrap()
         },
 
         Command::List(list) => {

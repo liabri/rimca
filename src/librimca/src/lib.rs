@@ -28,15 +28,17 @@ use std::path::Path;
 
 pub struct Instance<T> {
     paths: Paths,
+    output: bool,
     state: State,
     inner: T,
 }
 
 impl<T> Instance<T> {
-    fn get(state: State, paths: Paths, version: Option<String>) -> Result<Box<dyn InstanceTrait>, Error> {
+    fn get(state: State, paths: Paths, output: bool, version: Option<String>) -> Result<Box<dyn InstanceTrait>, Error> {
         let vanilla = Instance::<Vanilla> { 
             paths: paths.clone(), 
-            state: state.clone(), 
+            state: state.clone(),
+            output, 
             inner: Vanilla::new(&paths, version)?
         };
 
@@ -46,6 +48,7 @@ impl<T> Instance<T> {
                 Instance::<Fabric> {
                     inner: Fabric::new(&paths, vanilla)?,  
                     paths, 
+                    output,
                     state, 
             })),
             _ => Err(Error::StateError(StateError::ScenarioDoesNotExist(state.scenario)))
@@ -70,12 +73,12 @@ pub fn download(instance: &str, version: Option<String>, scenario: Option<String
     let scenario = scenario.unwrap_or_else(|| "vanilla".to_string());
     let state = State::from_scenario(scenario);
 
-    Instance::<Box<dyn InstanceTrait>>::get(state, paths, version)?.download()?;
+    Instance::<Box<dyn InstanceTrait>>::get(state, paths, true, version)?.download()?;
 
     Ok(())
 }
 
-pub fn launch(instance: &str, username: &str, base_dir: &Path) -> Result<(), Error> {
+pub fn launch(instance: &str, username: &str, output: bool, base_dir: &Path) -> Result<(), Error> {
     let mut paths = Paths::default();
     let instance_path = base_dir.join("instances").join(instance);
 
@@ -88,7 +91,7 @@ pub fn launch(instance: &str, username: &str, base_dir: &Path) -> Result<(), Err
 
     let state = State::read(paths.get("instance")?)?;  
 
-    Instance::<Box<dyn InstanceTrait>>::get(state, paths, None)?.launch(username)?;
+    Instance::<Box<dyn InstanceTrait>>::get(state, paths, output, None)?.launch(username)?;
 
     Ok(())
 }

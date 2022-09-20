@@ -1,11 +1,12 @@
 use crate::{ Instance, Paths };
 use crate::error::{ LaunchError, StateError };
 use crate::state::{ State, Component };
-use std::process::Command;
+use std::process::{ Command, Stdio };
 
 pub trait LaunchHelper {
     fn state(&self) -> &State;
     fn paths(&self) -> &Paths;
+    fn output(&self) -> bool;
 }
 
 impl <T> LaunchHelper for Instance<T> {
@@ -16,6 +17,10 @@ impl <T> LaunchHelper for Instance<T> {
     fn paths(&self) -> &Paths {
         &self.paths
     } 
+
+    fn output(&self) -> bool {
+        self.output
+    }
 }
 
 pub trait LaunchSequence: LaunchHelper {
@@ -55,11 +60,10 @@ pub trait LaunchSequence: LaunchHelper {
                 .arg(main_class)
                 .args(game_opts);
 
-            // if *self.no_output() {
-            //  log::debug!("JVM output disabled");
-            //  command.stdout(Stdio::null())
-            //  .stderr(Stdio::null());
-            // }
+            if self.output() {
+                log::debug!("JVM output disabled");
+                command.stdout(Stdio::null()).stderr(Stdio::null());
+            }
 
             log::info!("Spawning command: {:?}", command);
             command.spawn()?;
