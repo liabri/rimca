@@ -1,10 +1,7 @@
-use crate::error::LaunchError;
-use crate::vanilla::models::Meta;
-use crate::Paths;
-use std::process::Command;
-use crate::Instance;
-use crate::StateError;
+use crate::{ Instance, Paths };
+use crate::error::{ LaunchError, StateError };
 use crate::state::{ State, Component };
+use std::process::Command;
 
 pub trait LaunchHelper {
     fn state(&self) -> &State;

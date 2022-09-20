@@ -6,25 +6,22 @@ use models::Meta;
 use crate::Instance;
 use crate::download::DownloadSequence;
 use crate::vanilla::Vanilla;
-use crate::vanilla;
 use crate::launch::LaunchSequence;
-use crate::error::{ LaunchError, LaunchArguments, DownloadError, StateError };
+use crate::error::{ LaunchError, DownloadError };
 use crate::state::Component;
-use crate::verify::is_file_valid;
 use crate::Paths;
 
-use std::process::Command;
 use std::io::BufReader;
 use nizziel::{ Download, Downloads };
 
 pub struct Fabric {
     pub version: String,
-    pub vanilla: Instance<Vanilla>,
-    pub meta: Meta
+    pub meta: Meta,
+    pub vanilla: Instance<Vanilla>
 }
 
 impl Fabric {
-    pub fn new(paths: &Paths, version: Option<String>, vanilla: Instance<Vanilla>) -> Result<Self, DownloadError> {
+    pub fn new(paths: &Paths, vanilla: Instance<Vanilla>) -> Result<Self, DownloadError> {
         let version = api::best_version(&vanilla.inner.version.id)?;
 
         let meta = {
@@ -44,8 +41,8 @@ impl Fabric {
 
         Ok(Self {
             version,
-            vanilla,
-            meta
+            meta,
+            vanilla
         })
     }
 }

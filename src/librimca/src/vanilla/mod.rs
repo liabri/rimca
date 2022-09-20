@@ -3,16 +3,14 @@ pub mod api;
 pub mod models;
 pub use models::{ Meta, Assets };
 
-use crate::Instance;
+use crate::{ Instance, Paths };
 use crate::download::DownloadSequence;
 use crate::launch::LaunchSequence;
-use crate::error::{ Error, LaunchError, LaunchArguments, DownloadError, StateError };
+use crate::error::{ LaunchError, LaunchArguments, DownloadError, StateError };
 use crate::state::Component;
 use crate::verify::is_file_valid;
 use crate::vanilla::api::Version;
 
-use crate::Paths;
-use std::process::Command;
 use std::io::BufReader;
 use nizziel::{ Download, Downloads };
 
@@ -34,13 +32,14 @@ impl Vanilla {
 
         let meta = {
             let path = paths.get("meta")?.join("net.minecraft").join(format!("{}.json", &version.id));
-            if let Ok(file) = std::fs::File::open(&path) {
+            // if let Ok(file) = std::fs::File::open(&path) {
+                let file = std::fs::File::open(&path)?;
                 let reader = BufReader::new(file);
                 serde_json::from_reader(reader)?
-            } else {
-                let meta_str = nizziel::blocking::download(&version.url, &path, false)?;
-                serde_json::from_slice::<Meta>(&meta_str)?
-            }
+            // } else {
+            //     let meta_str = nizziel::blocking::download(&version.url, &path, false)?;
+            //     serde_json::from_slice::<Meta>(&meta_str)?
+            // }
         };
 
         Ok(Self {
@@ -101,7 +100,7 @@ impl DownloadSequence for Instance<Vanilla> {
         let url = &meta.asset_index.url;
         let path = self.paths.get("assets")?.join("indexes").join(format!("{}.json", asset_id));
 
-        let assets_str = nizziel::blocking::download(&url, &path, false)?;
+        let assets_str = nizziel::blocking::download(url, &path, false)?;
         let assets: Assets = serde_json::from_slice(&assets_str)?;
 
         if asset_id.eq("pre-1.6") || asset_id.eq("legacy") {

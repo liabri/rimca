@@ -22,8 +22,14 @@ pub enum Error {
 pub enum LaunchError {
     #[error("`{0}` arguments were not found")]
     ArgumentsNotFound(LaunchArguments),
-    #[error("io error: {0}")]
-    IoError(#[from] std::io::Error),
+    // #[error("io error: {0}")]
+    // IoError(#[from] std::io::Error),
+    #[error("io")]
+    IoError {
+        #[from]
+        source: std::io::Error,
+        backtrace: std::backtrace::Backtrace,
+    },
     #[error("account error: {0}")]
     AccountError(#[from] AccountError),
     #[error("state error: {0}")]
@@ -105,8 +111,13 @@ pub enum DownloadError {
     GameVersionNotFound(String),
     #[error("no game version was specified")]
     VersionNotSpecified,
-    #[error("io error: {0}")]
-    IoError(#[from] std::io::Error),
+    // IoError(#[from] std::io::Error),
+    #[error("IO")]
+    IoError {
+        #[from]
+        source: std::io::Error,
+        backtrace: std::backtrace::Backtrace,
+    },
     #[error("launch options error: {0}")]
     StateError(#[from] StateError),
     #[error("serde_json error: {0}")]

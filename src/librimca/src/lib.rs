@@ -1,3 +1,6 @@
+#![feature(error_generic_member_access)]
+#![feature(provide_any)]
+
 mod state;
 use state::State;
 
@@ -41,7 +44,7 @@ impl<T> Instance<T> {
             "vanilla" => Ok(Box::new(vanilla)),
             "fabric" => Ok(Box::new(
                 Instance::<Fabric> {
-                    inner: Fabric::new(&paths, None, vanilla)?,  
+                    inner: Fabric::new(&paths, vanilla)?,  
                     paths, 
                     state, 
             })),
@@ -54,7 +57,7 @@ pub trait InstanceTrait: LaunchSequence + DownloadSequence {}
 impl<T> InstanceTrait for T where T: LaunchSequence + DownloadSequence {}
 
 pub fn download(instance: &str, version: Option<String>, scenario: Option<String>, base_dir: &Path) -> Result<(), Error> {
-    let mut paths = Paths::new();
+    let mut paths = Paths::default();
     let instance_path = base_dir.join("instances").join(instance);
     std::fs::create_dir_all(&instance_path)?;
 
@@ -73,7 +76,7 @@ pub fn download(instance: &str, version: Option<String>, scenario: Option<String
 }
 
 pub fn launch(instance: &str, username: &str, base_dir: &Path) -> Result<(), Error> {
-    let mut paths = Paths::new();
+    let mut paths = Paths::default();
     let instance_path = base_dir.join("instances").join(instance);
 
     paths.0.insert("resources".to_string(), instance_path.join("resources")); 

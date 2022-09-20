@@ -1,6 +1,4 @@
-use serde::{ Serialize, Deserialize };
 use crate::error::ApiError;
-use super::models::Meta;
 
 const BASE_URL: &str = "https://meta.fabricmc.net"; //concatp!()
 pub(crate) const MANIFEST: &str = "https://meta.fabricmc.net/v2/versions/loader";
