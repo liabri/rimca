@@ -29,14 +29,16 @@ impl Fabric {
 
         let meta = {
             let path = paths.get("meta")?.join("net.fabricmc").join(format!("{}.json", &vanilla.inner.version.id));
-            let file = std::fs::File::open(&path)?;
-            let reader = BufReader::new(file);
-            if let Ok(meta) = serde_json::from_reader(reader) {
-                meta 
+            if let Ok(file) = std::fs::File::open(&path) {
+                let reader = BufReader::new(file); 
+                serde_json::from_reader(reader)?               
             } else {
-                todo!();
-                // let meta_str = nizziel::blocking::download(&version.url, &path, false)?;
-                // serde_json::from_slice::<Meta>(&meta_str)?
+                let meta_str = nizziel::blocking::download(
+                    &api::META
+                        .replace("{game_version}", &vanilla.inner.version.id)
+                        .replace("{loader_version}", &version), 
+                    &paths.get("meta")?.join("net.fabricmc").join(&format!("{}.json", &version)), false)?;
+                serde_json::from_slice(&meta_str)?
             }
         };
 
@@ -52,16 +54,7 @@ impl DownloadSequence for Instance<Fabric> {
     fn collect_urls(&mut self) -> Result<Downloads, DownloadError> {
         let mut dls = self.inner.vanilla.collect_urls()?;
 
-        let loader_version = api::best_version(&self.inner.vanilla.inner.version.id)?;
-
-        let meta_str = nizziel::blocking::download(
-            &api::META
-                .replace("{game_version}", &self.inner.vanilla.inner.version.id)
-                .replace("{loader_version}", &self.inner.version), 
-            &self.paths.get("meta")?.join("net.fabricmc").join(&format!("{}.json", &self.inner.version)), false)?;
-        let meta: Meta = serde_json::from_slice(&meta_str).unwrap();
-
-        for lib in meta.libraries {
+        for lib in &self.inner.meta.libraries {
             let split = lib.name.split(':').collect::<Vec<&str>>();
             let local_path = format!("{}/{}/{}/{}-{}.jar", 
                 split[0].to_string().replace('.', "/"), split[1], split[2], split[1], split[2]
