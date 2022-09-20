@@ -260,8 +260,4 @@ impl LaunchSequence for Instance<Vanilla> {
 
         Err(LaunchError::StateError(StateError::ComponentNotFound(String::from("java"))))
     }
-
-    // fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> { 
-
-    // }
 }

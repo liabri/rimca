@@ -39,28 +39,15 @@ impl<T> Instance<T> {
 
         match state.scenario.as_ref() { 
             "vanilla" => Ok(Box::new(vanilla)),
-            "fabric" => Ok(Box::new(Instance::<Fabric> { paths, state, inner: Fabric::from(vanilla) 
+            "fabric" => Ok(Box::new(
+                Instance::<Fabric> {
+                    inner: Fabric::new(&paths, None, vanilla)?,  
+                    paths, 
+                    state, 
             })),
             _ => Err(Error::StateError(StateError::ScenarioDoesNotExist(state.scenario)))
         }
     } 
-
-    // fn get(state: State, paths: Paths, version: Option<String>) -> Result<Instance<dyn InstanceTrait>, Error> {
-    //     let vanilla = Instance::<dyn InstanceTrait> { 
-    //         paths: paths.clone(), 
-    //         state: state.clone(), 
-    //         inner: Vanilla::new(&paths, version)?
-    //     };
-
-    //     match state.scenario.as_ref() { 
-    //         "vanilla" => Ok(vanilla),
-    //         "fabric" => Ok(Instance::<dyn InstanceTrait> { paths, state, inner: Fabric::from(vanilla) 
-    //         }),
-    //         _ => Err(Error::StateError(StateError::ScenarioDoesNotExist(state.scenario)))
-    //     }
-
-    //     vanilla
-    // }  
 }
 
 pub trait InstanceTrait: LaunchSequence + DownloadSequence {}
