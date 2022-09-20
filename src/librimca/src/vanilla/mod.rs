@@ -34,10 +34,9 @@ impl Vanilla {
 
         let meta = {
             let path = paths.get("meta")?.join("net.minecraft").join(format!("{}.json", &version.id));
-            let file = std::fs::File::open(&path)?;
-            let reader = BufReader::new(file);
-            if let Ok(meta) = serde_json::from_reader(reader) {
-                meta 
+            if let Ok(file) = std::fs::File::open(&path) {
+                let reader = BufReader::new(file);
+                serde_json::from_reader(reader)?
             } else {
                 let meta_str = nizziel::blocking::download(&version.url, &path, false)?;
                 serde_json::from_slice::<Meta>(&meta_str)?
