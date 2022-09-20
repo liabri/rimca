@@ -32,14 +32,13 @@ impl Vanilla {
 
         let meta = {
             let path = paths.get("meta")?.join("net.minecraft").join(format!("{}.json", &version.id));
-            // if let Ok(file) = std::fs::File::open(&path) {
-                let file = std::fs::File::open(&path)?;
+            if let Ok(file) = std::fs::File::open(&path) {
                 let reader = BufReader::new(file);
                 serde_json::from_reader(reader)?
-            // } else {
-            //     let meta_str = nizziel::blocking::download(&version.url, &path, false)?;
-            //     serde_json::from_slice::<Meta>(&meta_str)?
-            // }
+            } else {
+                let meta_str = nizziel::blocking::download(&version.url, &path, false)?;
+                serde_json::from_slice::<Meta>(&meta_str)?
+            }
         };
 
         Ok(Self {
