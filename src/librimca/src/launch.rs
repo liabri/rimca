@@ -27,10 +27,13 @@ pub trait LaunchSequence: LaunchHelper {
         log::info!("Game Options: {:?}", game_opts);
 
         let classpath = self.get_classpath()?;
-        log::info!("Downloading version jar: {}", classpath);
+        log::info!("Classpath: {}", classpath);
 
         let jvm_args = self.get_jvm_arguments(&classpath)?;
-        let main_class: String = self.get_main_class()?;
+        log::info!("Jvm Arguments: {:?}", jvm_args);
+
+        let main_class = self.get_main_class()?;
+        log::info!("Main Class: {}", main_class);
 
         self.execute(jvm_args, &main_class, game_opts)?;
         Ok(())
@@ -42,7 +45,7 @@ pub trait LaunchSequence: LaunchHelper {
     fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError>;
 
     fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> {
-                if let Ok(Component::JavaComponent { path, .. }) = self.state().get_component("java") {
+        if let Ok(Component::JavaComponent { path, .. }) = self.state().get_component("java") {
             let (exe, args) = match &self.state().wrapper {
                 Some(wrapper) => (wrapper.as_str(), &["java"][..]),
                 None => (path.as_str(), &[][..]),
@@ -56,12 +59,12 @@ pub trait LaunchSequence: LaunchHelper {
                 .args(game_opts);
 
             // if *self.no_output() {
-            //  log::debug!("No jvm output enabled");
+            //  log::debug!("JVM output disabled");
             //  command.stdout(Stdio::null())
             //  .stderr(Stdio::null());
             // }
 
-            println!("Spawning command: {:?}", command);
+            log::info!("Spawning command: {:?}", command);
             command.spawn()?;
 
             return Ok(())
