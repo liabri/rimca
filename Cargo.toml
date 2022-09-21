@@ -1,5 +1,3 @@
-cargo-features = ["profile-rustflags"]
-
 [workspace]
 members = [
     "src/rimca",
@@ -11,4 +9,3 @@ opt-level = 'z'
 lto = true
 codegen-units = 1
 strip = true
-rustflags= [ "target-cpu=native" ]
