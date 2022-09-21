@@ -29,3 +29,9 @@ SUBCOMMANDS:
     logout      Login
     verify      Verify integrity of game files of instance
 ```
+
+## notes
+Please keep in mind that a small portion of code still has to be neatly refactored there's still a fair bit of features that have yet to be added, such as:
+* Microsoft Authentication 
+⋅⋅⋅Already got something working but not yet pushed to master
+* Forge Support
