@@ -2,7 +2,7 @@
 #![feature(provide_any)]
 
 mod state;
-use state::State;
+use state::{ State, Component };
 
 mod download;
 pub use download::DownloadSequence;
@@ -90,8 +90,15 @@ pub fn launch(instance: &str, username: &str, output: bool, base_dir: &Path) -> 
     paths.0.insert("libraries".to_string(), base_dir.join("libraries")); 
 
     let state = State::read(paths.get("instance")?)?;  
+    let version = {
+        if let Component::GameComponent { version, .. } = state.get_component("net.minecraft")? {
+            version.to_string()
+        } else {
+            return Err(Error::StateError(StateError::ComponentNotFound(String::from("net.minecraft"))));
+        }
+    };
 
-    Instance::<Box<dyn InstanceTrait>>::get(state, paths, output, None)?.launch(username)?;
+    Instance::<Box<dyn InstanceTrait>>::get(state, paths, output, Some(version))?.launch(username)?;
 
     Ok(())
 }
