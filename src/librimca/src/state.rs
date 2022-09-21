@@ -42,9 +42,6 @@ impl State {
     }
 
     pub fn write(&self, instance_path: &Path) -> Result<(), StateError> {
-
-        println!("Writing state: {:?}", self);
-
         let path = instance_path.join("state.json");
         let file = File::create(&path)?;
         let reader: BufReader<File> = BufReader::new(file);
