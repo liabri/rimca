@@ -602,6 +602,7 @@ dependencies = [
 [[package]]
 name = "nizziel"
 version = "0.1.0"
+source = "git+https://github.com/liabri/nizziel#8a337e9b116dd46a3ae99c0a49b819f105190e8c"
 dependencies = [
  "futures",
  "reqwest",
