@@ -17,7 +17,6 @@ pub struct State {
 #[serde(untagged)]
 pub enum Component {
     GameComponent { 
-        // asset_index: Option<String>, 
         version: String 
     },
 

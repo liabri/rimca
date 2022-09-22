@@ -1,3 +1,6 @@
+mod config;
+use config::Config;
+
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
 use std::path::PathBuf;
@@ -5,18 +8,18 @@ use std::str::FromStr;
 use structopt::clap::Error;
 
 pub fn main() {
+    let cfg: Config = confy::load("rimca", "config").unwrap();
+
 	match Arguments::from_args().command {
 		// Command::Login => rimca::auth::Accounts::get().unwrap().new_account().unwrap(),
 		// Command::Delete{ instance } => Instance::get(&instance).delete().unwrap(),
         
         Command::Download(dl) => {
-            let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
-
 			if let Some(fabric) = dl.fabric {
                 // let fabric_version = fabric.unwrap();
-                rimca::download(&dl.instance, dl.version, Some(String::from("fabric")), &base_dir).unwrap()
+                rimca::download(&dl.instance, dl.version, Some(String::from("fabric")), &cfg.base_dir).unwrap()
 			} else {
-                rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &base_dir).unwrap()
+                rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &cfg.base_dir).unwrap()
 			}
         },
 
@@ -26,8 +29,7 @@ pub fn main() {
         // SOSH
 
         Command::Launch(l) => {
-            let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
-        	rimca::launch(&l.instance, &l.username, l.game_output, &base_dir).unwrap()
+        	rimca::launch(&l.instance, &l.username, l.game_output, &cfg.base_dir).unwrap()
         },
 
         Command::List(list) => {
@@ -48,8 +50,7 @@ pub fn main() {
                 }
                 //list remote stuff...
             } else {
-                let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
-                for instance in rimca::list_instances(&base_dir).unwrap() {
+                for instance in rimca::list_instances(&cfg.base_dir).unwrap() {
                     println!("{}", instance.as_str());
                 }    
             }
