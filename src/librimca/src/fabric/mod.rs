@@ -71,6 +71,7 @@ impl DownloadSequence for Instance<Fabric> {
     }
 
     fn create_state(&mut self) -> Result<(), DownloadError> {
+        self.inner.vanilla.create_state()?;
         self.state = self.inner.vanilla.state.clone();
         self.state.components.insert(
             "net.fabricmc".to_string(), 
@@ -79,7 +80,6 @@ impl DownloadSequence for Instance<Fabric> {
             }
         );
         
-        self.state.write(self.paths.get("instance")?)?;
         Ok(())
     }
 }

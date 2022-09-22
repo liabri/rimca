@@ -150,7 +150,6 @@ impl DownloadSequence for Instance<Vanilla> {
             }
         );
 
-        self.state.write(self.paths.get("instance")?)?;
         Ok(())
     }
 }

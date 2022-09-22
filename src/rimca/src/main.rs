@@ -16,13 +16,11 @@ pub fn main() {
         
         Command::Download(dl) => {
 			if let Some(fabric) = dl.fabric {
-                // let fabric_version = fabric.unwrap();
                 rimca::download(&dl.instance, dl.version, Some(String::from("fabric")), &cfg.base_dir).unwrap()
 			} else {
                 rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &cfg.base_dir).unwrap()
 			}
         },
-
 
         // SOSH
         // SOSH
@@ -76,7 +74,7 @@ pub enum Command {
 
     #[structopt(alias = "del", no_version, global_settings = &[AppSettings::DisableVersion])]
     ///Download minecraft version as an instance
-    Delete { instance: String },    
+    Delete { instance: String },
 
     #[structopt(alias = "l", no_version, global_settings = &[AppSettings::DisableVersion])]
     ///Launch minecraft instance
@@ -88,7 +86,7 @@ pub enum Command {
 
     #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
     ///Verify integrity of game files of instance
-    Verify { instance: String },    
+    Verify { instance: String },
 
     #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
     ///Login
