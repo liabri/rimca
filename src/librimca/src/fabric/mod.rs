@@ -67,12 +67,10 @@ impl DownloadSequence for Instance<Fabric> {
             }
         }
 
-        self.write_state()?;
-
         Ok(dls)
     }
 
-    fn write_state(&mut self) -> Result<(), DownloadError> {
+    fn create_state(&mut self) -> Result<(), DownloadError> {
         self.state = self.inner.vanilla.state.clone();
         self.state.components.insert(
             "net.fabricmc".to_string(), 

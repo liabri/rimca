@@ -131,11 +131,10 @@ impl DownloadSequence for Instance<Vanilla> {
             }
         }
 
-        self.write_state()?;
         Ok(dls)
     }
 
-    fn write_state(&mut self) -> Result<(), DownloadError> {
+    fn create_state(&mut self) -> Result<(), DownloadError> {
         self.state.components.insert(
             "java".to_string(), 
             Component::JavaComponent { 

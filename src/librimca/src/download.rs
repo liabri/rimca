@@ -4,10 +4,10 @@ use nizziel::{ download, Downloads };
 
 pub trait DownloadSequence {
     fn collect_urls(&mut self) -> Result<Downloads, DownloadError>;
-    
-    fn write_state(&mut self) -> Result<(), DownloadError>;
+    fn create_state(&mut self) -> Result<(), DownloadError>;
 
     fn download(&mut self) -> Result<(), DownloadError> {
+        self.create_state()?;
         let urls = self.collect_urls()?;
         self.spawn_thread(urls)
     }
