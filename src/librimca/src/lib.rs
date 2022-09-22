@@ -89,7 +89,9 @@ pub fn launch(instance: &str, username: &str, output: bool, base_dir: &Path) -> 
     paths.0.insert("assets".to_string(), base_dir.join("assets"));
     paths.0.insert("libraries".to_string(), base_dir.join("libraries")); 
 
-    let state = State::read(paths.get("instance")?)?;  
+    let state = State::read(paths.get("instance")?)?; 
+
+    //maybe move this to state.get_version(); 
     let version = {
         if let Component::GameComponent { version, .. } = state.get_component("net.minecraft")? {
             version.to_string()

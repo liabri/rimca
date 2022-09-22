@@ -131,24 +131,26 @@ impl DownloadSequence for Instance<Vanilla> {
             }
         }
 
-        self.create_state(asset_id.clone())?;
-
+        self.write_state()?;
         Ok(dls)
     }
 
-    fn create_state(&mut self, asset_id: String) -> Result<(), DownloadError> {
-        let java = Component::JavaComponent { 
-            path: "java".to_string(), 
-            arguments: None 
-        };
+    fn write_state(&mut self) -> Result<(), DownloadError> {
+        self.state.components.insert(
+            "java".to_string(), 
+            Component::JavaComponent { 
+                path: "java".to_string(), 
+                arguments: None 
+            }
+        );
 
-        let game = Component::GameComponent { 
-            asset_index: Some(asset_id), 
-            version: self.inner.version.id.to_string()
-        };
+        self.state.components.insert(
+            "net.minecraft".to_string(), 
+            Component::GameComponent { 
+                version: self.inner.version.id.to_string()
+            }
+        );
 
-        self.state.components.insert("java".to_string(), java);
-        self.state.components.insert("net.minecraft".to_string(), game);
         self.state.write(self.paths.get("instance")?)?;
         Ok(())
     }
@@ -162,8 +164,8 @@ impl LaunchSequence for Instance<Vanilla> {
     fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError> { 
         let meta = &self.inner.meta;
 
-        if let Component::GameComponent { asset_index, version } = self.state.get_component("net.minecraft")? {
-            let asset_index = asset_index.as_ref().ok_or_else(|| StateError::FieldNotFound("asset_index".to_string(), "net.minecraft".to_string()))?;   
+        if let Component::GameComponent { version } = self.state.get_component("net.minecraft")? {
+            let asset_index = &self.inner.meta.asset_index.id;
             let game_assets = self.paths.get("resources")?;
 
             let arguments = meta.arguments.get("game").ok_or(LaunchError::ArgumentsNotFound(LaunchArguments::Game))?;

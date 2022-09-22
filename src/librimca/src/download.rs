@@ -4,7 +4,8 @@ use nizziel::{ download, Downloads };
 
 pub trait DownloadSequence {
     fn collect_urls(&mut self) -> Result<Downloads, DownloadError>;
-    fn create_state(&mut self, asset_id: String) -> Result<(), DownloadError>;
+    
+    fn write_state(&mut self) -> Result<(), DownloadError>;
 
     fn download(&mut self) -> Result<(), DownloadError> {
         let urls = self.collect_urls()?;

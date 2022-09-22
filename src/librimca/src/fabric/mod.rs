@@ -67,20 +67,20 @@ impl DownloadSequence for Instance<Fabric> {
             }
         }
 
-        self.create_state(String::new())?;
+        self.write_state()?;
 
         Ok(dls)
     }
 
-    fn create_state(&mut self, _: String) -> Result<(), DownloadError> {
+    fn write_state(&mut self) -> Result<(), DownloadError> {
         self.state = self.inner.vanilla.state.clone();
-
-        let game = Component::GameComponent { 
-            asset_index: None, 
-            version: self.inner.version.clone()
-        };
-
-        self.state.components.insert("net.fabricmc".to_string(), game);
+        self.state.components.insert(
+            "net.fabricmc".to_string(), 
+            Component::GameComponent { 
+                version: self.inner.version.clone()
+            }
+        );
+        
         self.state.write(self.paths.get("instance")?)?;
         Ok(())
     }
