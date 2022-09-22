@@ -12,9 +12,8 @@ pub fn main() {
         Command::Download(dl) => {
             let base_dir = PathBuf::from("/home/liabri/loghob/minecraft/rimca/");
 
-
 			if let Some(fabric) = dl.fabric {
-                let fabric_version = fabric.unwrap();
+                // let fabric_version = fabric.unwrap();
                 rimca::download(&dl.instance, dl.version, Some(String::from("fabric")), &base_dir).unwrap()
 			} else {
                 rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &base_dir).unwrap()
