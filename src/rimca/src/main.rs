@@ -1,6 +1,8 @@
 mod config;
 use config::Config;
 
+mod logger;
+
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
 use std::path::PathBuf;
@@ -8,6 +10,7 @@ use std::str::FromStr;
 use structopt::clap::Error;
 
 pub fn main() {
+    logger::init("debug").map_err(|err| eprintln!("logger failed to initialise: {:?}", err)).unwrap();
     let cfg: Config = confy::load("rimca", "config").unwrap();
 
 	match Arguments::from_args().command {
