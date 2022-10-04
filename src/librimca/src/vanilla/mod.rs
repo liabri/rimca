@@ -165,18 +165,19 @@ impl LaunchSequence for Instance<Vanilla> {
         if let Component::GameComponent { version } = self.state.get_component("net.minecraft")? {
             let asset_index = &self.inner.meta.asset_index.id;
             let game_assets = self.paths.get("resources")?;
+            let assets_path = self.paths.get("assets")?;
 
             let arguments = meta.arguments.get("game").ok_or(LaunchError::ArgumentsNotFound(LaunchArguments::Game))?;
-            // let account = crate::auth::Accounts::get()?.get_account(self.username()).unwrap_or(auth::Account::default());
+            let account = crate::auth::Accounts::get(self.paths.get("accounts")?)?.get_account(username).unwrap_or(crate::auth::Account::default());
 
             return Ok(arguments.iter().map(|x| x
                     .replace("${auth_player_name}", username)
                     .replace("${version_name}", version)
                     .replace("${game_directory}", ".")
-                    .replace("${assets_root}", self.paths.get("assets").expect("assets").to_str().unwrap())
+                    .replace("${assets_root}", assets_path.to_str().unwrap())
                     .replace("${assets_index_name}", asset_index)
-                    .replace("${auth_uuid}", "null")//&account.uuid)
-                    .replace("${auth_access_token}", "null")//&account.access_token)
+                    .replace("${auth_uuid}", &account.uuid)
+                    .replace("${auth_access_token}", &account.access_token)
                     .replace("${user_type}", "mojang")
                     .replace("${version_type}", &meta.r#type)
                     .replace("${user_properties}", "{}")

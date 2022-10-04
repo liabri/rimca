@@ -91,6 +91,7 @@ pub fn launch(instance: &str, username: &str, output: bool, base_dir: &Path) -> 
     paths.0.insert("meta".to_string(), base_dir.join("meta")); 
     paths.0.insert("assets".to_string(), base_dir.join("assets"));
     paths.0.insert("libraries".to_string(), base_dir.join("libraries")); 
+    paths.0.insert("accounts".to_string(), base_dir.join("accounts").with_extension("json"));
 
     let state = State::read(paths.get("instance")?)?; 
 
