@@ -14,7 +14,7 @@ pub fn main() {
     let cfg: Config = confy::load("rimca", "config").unwrap();
 
 	match Arguments::from_args().command {
-		// Command::Login => rimca::auth::Accounts::get().unwrap().new_account().unwrap(),
+		Command::Login => rimca::login(&cfg.base_dir).unwrap(),
 		// Command::Delete{ instance } => Instance::get(&instance).delete().unwrap(),
         
         Command::Download(dl) => {

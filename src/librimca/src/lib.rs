@@ -21,6 +21,9 @@ pub use error::{ Error, StateError };
 
 mod verify;
 
+mod auth;
+use auth::Accounts;
+
 mod paths;
 use paths::Paths;
 
@@ -102,6 +105,13 @@ pub fn launch(instance: &str, username: &str, output: bool, base_dir: &Path) -> 
 
     Instance::<Box<dyn InstanceTrait>>::get(state, paths, output, Some(version))?.launch(username)?;
 
+    Ok(())
+}
+
+pub fn login(base_dir: &Path) -> Result<(), Error> {
+    let path = base_dir.join("accounts").with_extension("json");
+
+    Accounts::get(&path)?.new_account()?;
     Ok(())
 }
 

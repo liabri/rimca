@@ -26,16 +26,16 @@ impl <T> LaunchHelper for Instance<T> {
 pub trait LaunchSequence: LaunchHelper {
     fn launch(&self, username: &str) -> Result<(), LaunchError> {
         let game_opts = self.get_game_options(username)?;
-        log::info!("Game Options: {:?}", game_opts);
+        log::debug!("Game Options: {:?}", game_opts);
 
         let classpath = self.get_classpath()?;
-        log::info!("Classpath: {}", classpath);
+        log::debug!("Classpath: {}", classpath);
 
         let jvm_args = self.get_jvm_arguments(&classpath)?;
-        log::info!("Jvm Arguments: {:?}", jvm_args);
+        log::debug!("Jvm Arguments: {:?}", jvm_args);
 
         let main_class = self.get_main_class()?;
-        log::info!("Main Class: {}", main_class);
+        log::debug!("Main Class: {}", main_class);
 
         self.execute(jvm_args, &main_class, game_opts)?;
         Ok(())
@@ -61,11 +61,11 @@ pub trait LaunchSequence: LaunchHelper {
                 .args(game_opts);
 
             if self.output() {
-                log::debug!("JVM output disabled");
+                log::info!("JVM output disabled");
                 command.stdout(Stdio::null()).stderr(Stdio::null());
             }
 
-            log::info!("Spawning command: {:?}", command);
+            log::debug!("Spawning command: {:?}", command);
             command.spawn()?;
 
             return Ok(())

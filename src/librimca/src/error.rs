@@ -16,6 +16,8 @@ pub enum Error {
     NizzielError(#[from] nizziel::Error),
     #[error("path error: {0}")]
     PathError(#[from] PathError),
+    #[error("account error: {0}")]
+    AccountError(#[from] AccountError),
 }
 
 #[derive(Error, Debug)]
@@ -95,10 +97,10 @@ pub enum AccountError {
     IoError(#[from] std::io::Error),
     #[error("serde_json error: {0}")]
     SerdeJsonError(#[from] serde_json::Error),
-    // #[error("io error: {0}")]
-    // OpenerError(#[from] opener::OpenError),
-    // #[error("io error: {0}")]
-    // UrlParseError(#[from] url::ParseError),
+    #[error("io error: {0}")]
+    OpenerError(#[from] opener::OpenError),
+    #[error("io error: {0}")]
+    UrlParseError(#[from] url::ParseError),
 }
 
 #[derive(Error, Debug)]
