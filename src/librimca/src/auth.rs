@@ -34,15 +34,18 @@ const XBL_AUTH_PROPERTIES_SITE: &str = "user.auth.xboxlive.com";
 #[derive(Default, Debug, Serialize, Deserialize)]
 // pub struct Accounts(Vec<Account>);
 pub struct Accounts {
-    inner: Vec<Account>,
+    pub inner: Vec<Account>,
     #[serde(skip)] 
-    path: PathBuf
+    pub path: PathBuf
 }
 
 impl Accounts {
     pub fn get(path: &Path) -> Result<Self, AccountError> {
         match Self::read(path) {
-            Ok(x) => return Ok(x),
+            Ok(mut x) => {
+                x.path = path.to_path_buf();
+                return Ok(x)
+            },
             Err(_) => {
                 //If file doesn't exist, create it
                 std::fs::create_dir_all(&path.parent().unwrap())?;
@@ -64,7 +67,7 @@ impl Accounts {
     }
 
     pub fn write(&self) -> Result<(), AccountError> {
-        let file = std::fs::OpenOptions::new().write(true).open(&self.path)?;
+        let file = std::fs::OpenOptions::new().write(true).truncate(true).open(&self.path)?;
         let mut writer = BufWriter::new(file);
         serde_json::to_writer_pretty(&mut writer, &self)?;
         writer.flush()?;
@@ -82,7 +85,7 @@ impl Accounts {
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
+#[derive(Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Account {
     pub access_token: String,
     pub refresh_token: String,

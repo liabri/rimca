@@ -14,6 +14,7 @@ pub fn main() {
 
 	match Arguments::from_args().command {
 		Command::Login => rimca::login(&cfg.base_dir).unwrap(),
+        Command::Logout{ username } => rimca::logout(&username, &cfg.base_dir).unwrap(),
 		Command::Delete{ instance } => rimca::delete(&instance, &cfg.base_dir).unwrap(),
         
         Command::Download(dl) => {
@@ -89,9 +90,9 @@ pub enum Command {
     ///Login a user
     Login,
 
-    // #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
-    // ///Logout a user
-    // Logout { username: String },
+    #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
+    ///Logout a user
+    Logout { username: String },
 }
 
 #[derive(Debug)]

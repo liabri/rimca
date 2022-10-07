@@ -122,6 +122,14 @@ pub fn login(base_dir: &Path) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn logout(username: &str, base_dir: &Path) -> Result<(), Error> {
+    let path = base_dir.join("accounts").with_extension("json");
+    let mut accs = Accounts::get(&path)?;
+    accs.inner.retain(|acc| acc.name!=username);
+    accs.write()?;
+    Ok(())
+}
+
 pub fn list_instances(base_dir: &Path) -> std::io::Result<Vec<String>> {
     let instance_path = base_dir.join("instances");
     Ok(std::fs::read_dir(instance_path)?
