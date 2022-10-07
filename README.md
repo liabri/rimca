@@ -10,7 +10,7 @@ In addition, I do not like the direction in which Mojang is going and/or has tak
 
 ## usage
 ```
-rimca 0.2.0
+rimca 0.2.1
 
 USAGE:
     rimca <SUBCOMMAND>
@@ -20,12 +20,10 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    delete      Download minecraft version as an instance
+    delete      Delete a minecraft instance
     download    Download minecraft version as an instance
     help        Prints this message or the help of the given subcommand(s)
     launch      Launch minecraft instance
     list        List installed minecraft instances
-    login       Login
-    logout      Login
-    verify      Verify integrity of game files of instance
+    login       Login a user
 ```
