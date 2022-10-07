@@ -5,7 +5,6 @@ mod logger;
 
 use structopt::StructOpt;
 use structopt::clap::AppSettings;
-use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::clap::Error;
 
@@ -15,7 +14,7 @@ pub fn main() {
 
 	match Arguments::from_args().command {
 		Command::Login => rimca::login(&cfg.base_dir).unwrap(),
-		// Command::Delete{ instance } => Instance::get(&instance).delete().unwrap(),
+		Command::Delete{ instance } => rimca::delete(&instance, &cfg.base_dir).unwrap(),
         
         Command::Download(dl) => {
 			if let Some(fabric) = dl.fabric {
@@ -24,10 +23,6 @@ pub fn main() {
                 rimca::download(&dl.instance, dl.version, Some(String::from("vanilla")), &cfg.base_dir).unwrap()
 			}
         },
-
-        // SOSH
-        // SOSH
-        // SOSH
 
         Command::Launch(l) => {
         	rimca::launch(&l.instance, &l.username, l.game_output, &cfg.base_dir).unwrap()
@@ -49,7 +44,6 @@ pub fn main() {
         //  }      
                     }
                 }
-                //list remote stuff...
             } else {
                 for instance in rimca::list_instances(&cfg.base_dir).unwrap() {
                     println!("{}", instance.as_str());
@@ -76,7 +70,7 @@ pub enum Command {
     Download(Download),
 
     #[structopt(alias = "del", no_version, global_settings = &[AppSettings::DisableVersion])]
-    ///Download minecraft version as an instance
+    ///Delete a minecraft instance
     Delete { instance: String },
 
     #[structopt(alias = "l", no_version, global_settings = &[AppSettings::DisableVersion])]
@@ -87,17 +81,17 @@ pub enum Command {
     ///List installed minecraft instances
     List(List),
 
-    #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
-    ///Verify integrity of game files of instance
-    Verify { instance: String },
+    // #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
+    // ///Verify integrity of game files of instance
+    // Verify { instance: String },
 
     #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
-    ///Login
+    ///Login a user
     Login,
 
-    #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
-    ///Login
-    Logout { username: String },
+    // #[structopt(no_version, global_settings = &[AppSettings::DisableVersion])]
+    // ///Logout a user
+    // Logout { username: String },
 }
 
 #[derive(Debug)]

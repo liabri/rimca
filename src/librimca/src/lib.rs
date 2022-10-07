@@ -109,6 +109,12 @@ pub fn launch(instance: &str, username: &str, output: bool, base_dir: &Path) -> 
     Ok(())
 }
 
+pub fn delete(instance: &str, base_dir: &Path) -> std::io::Result<()> {
+    let instance_path = base_dir.join("instances").join(instance);
+    std::fs::remove_dir_all(instance_path)
+}
+
+
 pub fn login(base_dir: &Path) -> Result<(), Error> {
     let path = base_dir.join("accounts").with_extension("json");
 
