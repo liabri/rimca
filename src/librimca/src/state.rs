@@ -16,13 +16,13 @@ pub struct State {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum Component {
-    GameComponent { 
-        version: String 
+    GameComponent {
+        version: String
     },
 
-    JavaComponent { 
-        path: String, 
-        arguments: Option<String> 
+    JavaComponent {
+        path: String,
+        arguments: Option<String>
     }
 }
 

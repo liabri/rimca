@@ -13,6 +13,7 @@ use crate::vanilla::api::Version;
 
 use std::io::BufReader;
 use nizziel::{ Download, Downloads };
+use regex::Regex;
 
 pub struct Vanilla {
     pub version: Version,
@@ -89,8 +90,8 @@ impl DownloadSequence for Instance<Vanilla> {
                         url: url.url.to_string(),
                         path: natives_dir.clone(),
                         unzip: true
-                    }); 
-                }           
+                    });
+                }
             }
         }
 
@@ -136,16 +137,16 @@ impl DownloadSequence for Instance<Vanilla> {
 
     fn create_state(&mut self) -> Result<(), DownloadError> {
         self.state.components.insert(
-            "java".to_string(), 
-            Component::JavaComponent { 
-                path: "java".to_string(), 
-                arguments: None 
+            "java".to_string(),
+            Component::JavaComponent {
+                path: "java".to_string(),
+                arguments: None
             }
         );
 
         self.state.components.insert(
-            "net.minecraft".to_string(), 
-            Component::GameComponent { 
+            "net.minecraft".to_string(),
+            Component::GameComponent {
                 version: self.inner.version.id.to_string()
             }
         );
@@ -158,8 +159,8 @@ impl LaunchSequence for Instance<Vanilla> {
     fn get_main_class(&self) -> Result<String, LaunchError> {
         Ok(self.inner.meta.main_class.clone())
     }
-    
-    fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError> { 
+
+    fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError> {
         let meta = &self.inner.meta;
 
         if let Component::GameComponent { version } = self.state.get_component("net.minecraft")? {
@@ -191,8 +192,8 @@ impl LaunchSequence for Instance<Vanilla> {
         Err(LaunchError::StateError(StateError::ComponentNotFound(String::from("net.minecraft"))))
     }
 
-    fn get_classpath(&self) -> Result<String, LaunchError> { 
-        let meta = &self.inner.meta;
+    fn get_classpath(&mut self) -> Result<String, LaunchError> {
+        let meta = &mut self.inner.meta;
         let libraries = self.paths.get("libraries")?;
 
         let mut classpath = String::with_capacity((libraries.to_str().unwrap().len() * meta.libraries.len())
@@ -200,12 +201,12 @@ impl LaunchSequence for Instance<Vanilla> {
             + meta.libraries.iter().map(|lib| lib.downloads.artifact.as_ref().map_or(0, |a| a.path.len())).sum::<usize>()
         );
 
-        'outer: for lib in &meta.libraries {
+        'outer: for lib in &mut meta.libraries {
             if let Some(rules) = &lib.rules {
                 for rule in rules {
                     if let Some(os) = &rule.os {
                         if let Some(name) = &os.name {
-                            if rule.action.eq("allow") && name.ne("linux") || 
+                            if rule.action.eq("allow") && name.ne("linux") ||
                             rule.action.eq("disallow") && name.eq("linux") {
                                 continue 'outer
                             }
@@ -214,7 +215,15 @@ impl LaunchSequence for Instance<Vanilla> {
                 }
             }
 
-            if let Some(artifact) = &lib.downloads.artifact { 
+            if let Some(artifact) = &mut lib.downloads.artifact {
+                // allow choosing lwjgl ver
+                if artifact.path.contains("lwjgl") {
+                    if let Component::GameComponent { version } = self.state.get_component("org.lwjgl")? {
+                        let re = Regex::new(r"\b\d+\.\d+\.\d+\b").unwrap();
+                        artifact.path = re.replace_all(&artifact.path, version).into_owned();
+                    }
+                }
+
                 classpath.push_str(libraries.to_str().unwrap());
                 classpath.push('/');
                 classpath.push_str(&artifact.path);
@@ -227,8 +236,8 @@ impl LaunchSequence for Instance<Vanilla> {
         classpath.push_str(jar_path.to_str().unwrap());
         Ok(classpath)
     }
-    
-    fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError> { 
+
+    fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError> {
         let natives_directory = self.paths.get("natives")?;
 
         let mut jvm_arguments = {
@@ -245,13 +254,13 @@ impl LaunchSequence for Instance<Vanilla> {
                 jvm_arguments.push("-cp".to_string());
                 jvm_arguments.push(classpath.to_string());
                 jvm_arguments
-            } 
+            }
         };
 
         if let Ok(Component::JavaComponent { arguments, .. }) = &self.state.get_component("java") {
             if let Some(args) = arguments {
                 jvm_arguments.extend(args.split_whitespace().map(|s| s.to_string()));
-            } 
+            }
 
             return Ok(jvm_arguments);
         }

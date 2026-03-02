@@ -16,7 +16,7 @@ impl <T> LaunchHelper for Instance<T> {
 
     fn paths(&self) -> &Paths {
         &self.paths
-    } 
+    }
 
     fn output(&self) -> bool {
         self.output
@@ -24,7 +24,7 @@ impl <T> LaunchHelper for Instance<T> {
 }
 
 pub trait LaunchSequence: LaunchHelper {
-    fn launch(&self, username: &str) -> Result<(), LaunchError> {
+    fn launch(&mut self, username: &str) -> Result<(), LaunchError> {
         let game_opts = self.get_game_options(username)?;
         log::debug!("Game Options: {:?}", game_opts);
 
@@ -43,7 +43,7 @@ pub trait LaunchSequence: LaunchHelper {
 
     fn get_main_class(&self) -> Result<String, LaunchError>;
     fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError>;
-    fn get_classpath(&self) -> Result<String, LaunchError>;
+    fn get_classpath(&mut self) -> Result<String, LaunchError>;
     fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError>;
 
     fn execute(&self, jvm_args: Vec<String>, main_class: &str, game_opts: Vec<String>) -> Result<(), LaunchError> {

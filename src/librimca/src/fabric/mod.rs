@@ -27,13 +27,13 @@ impl Fabric {
         let meta = {
             let path = paths.get("meta")?.join("net.fabricmc").join(format!("{}.json", &vanilla.inner.version.id));
             if let Ok(file) = std::fs::File::open(&path) {
-                let reader = BufReader::new(file); 
-                serde_json::from_reader(reader)?               
+                let reader = BufReader::new(file);
+                serde_json::from_reader(reader)?
             } else {
                 let meta_str = nizziel::blocking::download(
                     &api::META
                         .replace("{game_version}", &vanilla.inner.version.id)
-                        .replace("{loader_version}", &version), 
+                        .replace("{loader_version}", &version),
                     &paths.get("meta")?.join("net.fabricmc").join(&format!("{}.json", &version)), false)?;
                 serde_json::from_slice(&meta_str)?
             }
@@ -53,7 +53,7 @@ impl DownloadSequence for Instance<Fabric> {
 
         for lib in &self.inner.meta.libraries {
             let split = lib.name.split(':').collect::<Vec<&str>>();
-            let local_path = format!("{}/{}/{}/{}-{}.jar", 
+            let local_path = format!("{}/{}/{}/{}-{}.jar",
                 split[0].to_string().replace('.', "/"), split[1], split[2], split[1], split[2]
             );
 
@@ -74,12 +74,12 @@ impl DownloadSequence for Instance<Fabric> {
         self.inner.vanilla.create_state()?;
         self.state = self.inner.vanilla.state.clone();
         self.state.components.insert(
-            "net.fabricmc".to_string(), 
-            Component::GameComponent { 
+            "net.fabricmc".to_string(),
+            Component::GameComponent {
                 version: self.inner.version.clone()
             }
         );
-        
+
         Ok(())
     }
 }
@@ -88,19 +88,19 @@ impl LaunchSequence for Instance<Fabric> {
     fn get_main_class(&self) -> Result<String, LaunchError> {
         Ok(self.inner.meta.main_class.clone())
     }
-    
-    fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError> { 
+
+    fn get_game_options(&self, username: &str) -> Result<Vec<String>, LaunchError> {
         self.inner.vanilla.get_game_options(username)
     }
 
-    fn get_classpath(&self) -> Result<String, LaunchError> { 
+    fn get_classpath(&mut self) -> Result<String, LaunchError> {
         let mut classpath = self.inner.vanilla.get_classpath()?;
 
         let dir_name = self.paths.get("libraries")?;
         classpath.push(':');
         for lib in &self.inner.meta.libraries {
             let split = lib.name.split(':').collect::<Vec<&str>>();
-            let path = format!("/{}/{}/{}/{}-{}.jar", 
+            let path = format!("/{}/{}/{}/{}-{}.jar",
                 split[0].to_string().replace('.', "/"), split[1], split[2], split[1], split[2]
             );
 
@@ -113,8 +113,8 @@ impl LaunchSequence for Instance<Fabric> {
 
         Ok(classpath)
     }
-    
-    fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError> { 
+
+    fn get_jvm_arguments(&self, classpath: &str) -> Result<Vec<String>, LaunchError> {
         self.inner.vanilla.get_jvm_arguments(classpath)
     }
 }

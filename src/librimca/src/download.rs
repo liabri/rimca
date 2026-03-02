@@ -35,7 +35,7 @@ pub trait DownloadSequence: DownloadHelper {
         log::info!("Downloading!");
 
         let before = std::time::Instant::now();
-        let rt = tokio::runtime::Builder::new_multi_thread()
+        let rt = tokio::runtime::Builder::new_current_thread()
             .worker_threads(10)
             .enable_io()
             .enable_time()
@@ -48,6 +48,6 @@ pub trait DownloadSequence: DownloadHelper {
         );
 
         log::info!("Time taken: {:.2?}", before.elapsed());
-        Ok(())      
+        Ok(())
     }
 }
